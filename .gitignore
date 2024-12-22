@@ -1,1 +1,4 @@
 /tutorial-dist/
+/docs/_build
+/dist/
+__pycache__
