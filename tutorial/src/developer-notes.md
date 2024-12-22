@@ -3,11 +3,13 @@
 I use PyScaffold to set up the Python project
 
 ```sh
-pip install --upgrade tox sphinx sphinx-rtd-theme pytest pytest-cov pyscaffold[all] pre-commit
+pip install --upgrade tox sphinx sphinx-rtd-theme nbsphinx pytest pytest-cov pyscaffold[all] pre-commit pip setuptools
+conda install pandoc
+
 # only run once when setting up the project
 putup qec_lego_bench
 
-pip install -U pip setuptools -e .
+pip install -U -e .
 pre-commit install
 
 tox -e docs  # to build your documentation

@@ -35,6 +35,7 @@ Contents
    Authors <authors>
    Changelog <changelog>
    Module Reference <api/modules>
+   Introduction <notebooks/Introduction.ipynb>
 
 
 Indices and tables
