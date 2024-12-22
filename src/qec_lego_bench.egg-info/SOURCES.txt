@@ -1,0 +1,14 @@
+LICENSE.txt
+README.rst
+pyproject.toml
+setup.cfg
+setup.py
+src/qec_lego_bench/__init__.py
+src/qec_lego_bench/skeleton.py
+src/qec_lego_bench.egg-info/PKG-INFO
+src/qec_lego_bench.egg-info/SOURCES.txt
+src/qec_lego_bench.egg-info/dependency_links.txt
+src/qec_lego_bench.egg-info/not-zip-safe
+src/qec_lego_bench.egg-info/requires.txt
+src/qec_lego_bench.egg-info/top_level.txt
+tests/test_skeleton.py
