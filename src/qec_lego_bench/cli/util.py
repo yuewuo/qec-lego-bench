@@ -1,5 +1,7 @@
 from typing import Any
 from urllib.parse import parse_qs
+import inspect
+import types
 
 
 def kwargs_of_qs(qs: str) -> dict[str, str]:
@@ -29,3 +31,24 @@ def named_kwargs_of(input: str) -> tuple[str, dict[str, str]]:
     name = input
     assert name.isidentifier(), f"name '{name}' is not a valid identifier"
     return name, {}
+
+
+def params_of_func_or_cls(func: Any) -> dict[str, Any]:
+    """
+    the decorated class must have an initialization function that accepts str, int or float KEYWORD input.
+    or it could be a function that accepts str, int or float KEYWORD input.
+    All other types of arguments must be convertible from str, i.e., cls(str) must work
+    """
+    signature = inspect.signature(func)
+    params = {}
+    for param in list(signature.parameters.values()):
+        if isinstance(param.annotation, types.UnionType):
+            args = [arg for arg in param.annotation.__args__ if arg != type(None)]
+            assert len(args) == 1, "only support Union[TYPE, None] for now"
+            assert (
+                param.default is None
+            ), f"default value of {param.name} must be None for Union[TYPE, None] in {func.__name__}"
+            params[param.name] = args[0]
+        else:
+            params[param.name] = param.annotation
+    return params
