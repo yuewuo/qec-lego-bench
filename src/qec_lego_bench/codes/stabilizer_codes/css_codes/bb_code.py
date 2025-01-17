@@ -1,8 +1,5 @@
-from qec_lego_bench.codes.code import Code
 from qec_lego_bench.codes.stabilizer_codes.css_codes import CSSCode
-from stim import Circuit
 from dataclasses import dataclass
-import stim
 from galois import GF2
 import numpy as np
 from galois.typing import ArrayLike
@@ -15,34 +12,17 @@ BBExpr = tuple[int, int, int]
 
 
 @dataclass
-class BBConfig:
-
-    def __str__(self) -> str:
-        n, k, d = self.nkd
-        str_of = lambda bb_expr: "+".join(
-            [
-                "1" if exp == 0 else (var if exp == 1 else f"{var}^{{{exp}}}")
-                for (var, exp) in bb_expr
-            ]
-        )
-        d_str = ("\\le" if self.unsure_d else "") + str(d)
-        return f"[[{n}, {k}, {d_str}]]: l={self.l}, m={self.m}, A={str_of(self.A)}, B={str_of(self.B)}"
-
-    @property
-    def n(self) -> int:
-        return 2 * self.l * self.m
-
-
-@dataclass
-class BBCode(Code):
-    n: int
-    k: int
-    d: int
+class BBCode(CSSCode):
+    nkd: tuple[int, int, int]
     l: int
     m: int
     a: BBExpr
     b: BBExpr
     unsure_d: bool = False
+
+    @property
+    def n(self) -> int:
+        return self.nkd[0]
 
     def __post_init__(self):
         # sanity check
@@ -65,8 +45,8 @@ class BBCode(Code):
         self.matrix_B += x_matrix(self.l, self.m, self.b[2])
 
         assert (self.matrix_A @ self.matrix_B == self.matrix_B @ self.matrix_A).all()
-        self.H_X = np.concatenate((self.matrix_A, self.matrix_B), axis=1)
-        self.H_Z = np.concatenate((self.matrix_B.T, self.matrix_A.T), axis=1)
+        self._H_X = np.concatenate((self.matrix_A, self.matrix_B), axis=1)
+        self._H_Z = np.concatenate((self.matrix_B.T, self.matrix_A.T), axis=1)
 
         assert k_of(self.matrix_A, self.matrix_B) == k
 
@@ -79,22 +59,73 @@ class BBCode(Code):
         )
         assert len(self.logical_operators) == k
 
-    def __init__(self):
-        c = Circuit()
+    @property
+    def H_X(self) -> ArrayLike:
+        return self._H_X
 
-        c.append("MPP", [[stim.target_x(0), stim.target_y(1), stim.target_z(2)]])
-        print(self.c)
-        self.c = c
-        print(c.num_measurements)
+    @property
+    def H_Z(self) -> ArrayLike:
+        return self._H_Z
 
-    def circuit(self) -> Circuit:
-        return self.circuit
+    def __str__(self) -> str:
+        n, k, d = self.nkd
+        pow_of = lambda var, exp: (
+            "1" if exp == 0 else var if exp == 1 else f"{var}^{exp}"
+        )
+        str_A = (
+            f"{pow_of('x',self.a[0])}+{pow_of('y',self.a[1])}+{pow_of('y',self.a[2])}"
+        )
+        str_B = (
+            f"{pow_of('y',self.b[0])}+{pow_of('x',self.b[1])}+{pow_of('x',self.b[2])}"
+        )
+        d_str = ("\\le" if self.unsure_d else "") + str(d)
+        return f"[[{n}, {k}, {d_str}]]: l={self.l}, m={self.m}, A={str_A}, B={str_B}"
+
+
+bb_code_params = [
+    dict(
+        nkd=(72, 12, 6),
+        l=6,
+        m=6,
+        a=(3, 1, 2),
+        b=(3, 1, 2),
+    ),
+    dict(
+        nkd=(90, 8, 10),
+        l=15,
+        m=3,
+        a=(9, 1, 2),
+        b=(0, 2, 7),
+    ),
+    dict(
+        nkd=(108, 8, 10),
+        l=9,
+        m=6,
+        a=(3, 1, 2),
+        b=(3, 1, 2),
+    ),
+    dict(
+        nkd=(144, 12, 12),
+        l=12,
+        m=6,
+        a=(3, 1, 2),
+        b=(3, 1, 2),
+    ),
+    dict(
+        n=(288, 12, 18),
+        l=12,
+        m=12,
+        a=(3, 2, 7),
+        b=(3, 1, 2),
+    ),
+]
 
 
 @code_cli("BBCode")
-class BBCodeCli:
-    def __init__(self, p: float, d: int):
-        pass
+def bb_code_cli(n: int, k: int, d: int) -> BBCode:
+    for params in bb_code_params:
+        if params["nkd"] == (n, k, d):
+            return BBCode(**params)
 
 
 gf2_zeros = lambda shape: GF2(np.zeros(shape, dtype=np.uint8))

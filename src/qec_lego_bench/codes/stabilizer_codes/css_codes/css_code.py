@@ -19,12 +19,16 @@ class CSSCode(StabilizerCode, ABC):
 
     def css_init_stabilizers(self):
         assert (self.H_X @ self.H_Z.T == 0).all(), "X and Z checks must commute"
-        self.stabilizers = []
+        self._stabilizers = []
         for t, matrix in [("X", self.H_X), ("Z", self.H_Z)]:
             for line in matrix:
-                self.stabilizers.append(
+                self._stabilizers.append(
                     stim.PauliString([t if e == 1 else "I" for e in line])
                 )
+
+    @property
+    def stabilizers(self) -> list[stim.PauliString]:
+        return self._stabilizers
 
     def __init__(self):
         self.css_init_stabilizers()
