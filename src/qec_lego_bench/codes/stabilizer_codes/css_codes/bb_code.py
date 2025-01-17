@@ -4,7 +4,6 @@ from galois import GF2
 import numpy as np
 from galois.typing import ArrayLike
 from itertools import chain
-import mwpf
 from qec_lego_bench.cli.codes import code_cli
 
 
@@ -24,7 +23,7 @@ class BBCode(CSSCode):
     def n(self) -> int:
         return self.nkd[0]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # sanity check
         n, k, d = self.nkd
         assert n == 2 * self.l * self.m
@@ -34,12 +33,12 @@ class BBCode(CSSCode):
         # construct the matrices
         lm = self.l * self.m
 
-        self.matrix_A: ArrayLike = gf2_zeros(shape=(lm, lm))
+        self.matrix_A: ArrayLike = GF2(np.zeros((lm, lm), dtype=np.uint8))
         self.matrix_A += x_matrix(self.l, self.m, self.a[0])
         self.matrix_A += y_matrix(self.l, self.m, self.a[1])
         self.matrix_A += y_matrix(self.l, self.m, self.a[2])
 
-        self.matrix_B: ArrayLike = gf2_zeros(shape=(lm, lm))
+        self.matrix_B: ArrayLike = GF2(np.zeros((lm, lm), dtype=np.uint8))
         self.matrix_B += y_matrix(self.l, self.m, self.b[0])
         self.matrix_B += x_matrix(self.l, self.m, self.b[1])
         self.matrix_B += x_matrix(self.l, self.m, self.b[2])
@@ -48,13 +47,21 @@ class BBCode(CSSCode):
         self._H_X = np.concatenate((self.matrix_A, self.matrix_B), axis=1)
         self._H_Z = np.concatenate((self.matrix_B.T, self.matrix_A.T), axis=1)
 
-        assert k_of(self.matrix_A, self.matrix_B) == k
-
         super().__init__()
 
-        # assert k value
+        # assert k value using multiple equivalent methods
         assert (
-            2 * lm - np.linalg.matrix_rank(self.H_X) - np.linalg.matrix_rank(self.H_Z)
+            2
+            * (
+                self.matrix_A.shape[1]
+                - np.linalg.matrix_rank(
+                    np.concatenate((self.matrix_A, self.matrix_B), axis=0)
+                )
+            )
+            == k
+        )
+        assert (
+            2 * lm - np.linalg.matrix_rank(self.H_X) - np.linalg.matrix_rank(self.H_Z)  # type: ignore
             == k
         )
         assert len(self.logical_operators) == k
@@ -125,32 +132,19 @@ bb_code_params = [
 def bb_code_cli(n: int, k: int, d: int) -> BBCode:
     for params in bb_code_params:
         if params["nkd"] == (n, k, d):
-            return BBCode(**params)
-
-
-gf2_zeros = lambda shape: GF2(np.zeros(shape, dtype=np.uint8))
-gf2_eye = lambda N: GF2(np.eye(N, dtype=np.uint8))
+            return BBCode(**params)  # type: ignore
+    raise ValueError(f"no BBCode with n={n}, k={k}, d={d}")
 
 
 def x_matrix(l: int, m: int, exp: int):
-    S = gf2_zeros(shape=(l, l))
+    S = GF2(np.zeros((l, l), dtype=np.uint8))
     for i in range(l):
         S[i, (i + exp) % l] = 1
-    return np.kron(S, gf2_eye(m))
+    return np.kron(S, GF2(np.eye(m, dtype=np.uint8)))
 
 
 def y_matrix(l: int, m: int, exp: int):
-    S = gf2_zeros(shape=(m, m))
+    S = GF2(np.zeros((m, m), dtype=np.uint8))
     for i in range(m):
         S[i, (i + exp) % m] = 1
-    return np.kron(gf2_eye(l), S)
-
-
-def k_of(matrix_A: ArrayLike, matrix_B: ArrayLike) -> int:
-    gf2 = mwpf.TightMatrix()
-    for i in range(matrix_A.shape[1]):
-        gf2.add_tight_variable(i)
-    for line_idx, line in enumerate(chain(matrix_A, matrix_B)):
-        gf2.add_constraint(line_idx, np.nonzero(line)[0], False)
-    echelon = mwpf.EchelonMatrix(gf2)
-    return 2 * (matrix_A.shape[1] - echelon.rows)
+    return np.kron(GF2(np.eye(l, dtype=np.uint8)), S)

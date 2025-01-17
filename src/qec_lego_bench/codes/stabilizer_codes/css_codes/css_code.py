@@ -7,7 +7,6 @@ import numpy as np
 
 
 class CSSCode(StabilizerCode, ABC):
-    logical_operators: list[tuple[ArrayLike, ArrayLike]]
 
     @property
     @abstractmethod
@@ -40,7 +39,7 @@ class CSSCode(StabilizerCode, ABC):
 
 
 def construct_logical_checks(
-    logical_operators: list[stim.PauliString],
+    logical_operators: list[tuple[stim.PauliString, stim.PauliString]],
 ) -> tuple[ArrayLike, ArrayLike]:
     height = len(logical_operators)
     width = len(logical_operators[0][0])
