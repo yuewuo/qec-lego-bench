@@ -1,6 +1,6 @@
 from .noise import Noise
 from dataclasses import dataclass
-from qec_lego_bench.cli.noise import noise_cli
+from qec_lego_bench.cli.noises import noise_cli
 import stim
 
 

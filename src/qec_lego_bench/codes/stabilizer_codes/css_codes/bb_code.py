@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from galois import GF2
 import numpy as np
 from galois.typing import ArrayLike
-from itertools import chain
 from qec_lego_bench.cli.codes import code_cli
 
 

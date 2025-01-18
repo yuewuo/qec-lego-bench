@@ -1,6 +1,6 @@
 from .noise import Noise
 from dataclasses import dataclass
-from qec_lego_bench.cli.noise import noise_cli
+from qec_lego_bench.cli.noises import noise_cli
 import stim
 
 
@@ -28,9 +28,14 @@ class FlipNoise(Noise):
             circuit.append(self.basis + "_ERROR", all_qubits, self.p)
 
     def __call__(self, circuit: stim.Circuit) -> stim.Circuit:
-        noisy_c = stim.Circuit()
+        noisy = stim.Circuit()
+        self.add_noise_to(circuit, noisy)
+        return noisy
+
+    def add_noise_to(self, circuit: stim.Circuit, noisy: stim.Circuit):
         for op in circuit:
-            noisy_c.append(op)
+            noisy.append(op)
             if op.name == "TICK":
-                self._add_noise(noisy_c)
-        return noisy_c
+                self._add_noise(noisy)
+            if op.name == "REPEAT":
+                self.add_noise_to(op.body_copy(), noisy)

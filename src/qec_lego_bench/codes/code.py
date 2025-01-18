@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from stim import Circuit, DetectorErrorModel
+from stim import Circuit
 
 
 class Code(ABC):

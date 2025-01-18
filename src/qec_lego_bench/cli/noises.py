@@ -5,6 +5,7 @@ registered_noise_names = {}
 
 
 def noise_cli(noise_name: str):
+
     def decorator(constructor):
         params = params_of_func_or_cls(constructor)
         if noise_name in registered_noise_names:
