@@ -27,7 +27,10 @@ class NoiseCli:
     def __init__(self, input: str):
         noise_name, params = named_kwargs_of(input)
         if noise_name not in registered_noise_names:
-            print(f"[error] noise name '{noise_name}' not found", file=sys.stderr)
+            print(
+                f"[error] noise name '{noise_name}' not found, possible values: {', '.join(registered_noise_names.keys())}",
+                file=sys.stderr,
+            )
             raise ValueError()
         cls, expected_params = registered_noise_names[noise_name]
         kwargs = {}

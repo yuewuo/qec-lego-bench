@@ -34,8 +34,12 @@ class FlipNoise(Noise):
 
     def add_noise_to(self, circuit: stim.Circuit, noisy: stim.Circuit):
         for op in circuit:
-            noisy.append(op)
             if op.name == "TICK":
+                noisy.append(op)
                 self._add_noise(noisy)
-            if op.name == "REPEAT":
-                self.add_noise_to(op.body_copy(), noisy)
+            elif op.name == "REPEAT":
+                repeat = stim.Circuit()
+                self.add_noise_to(op.body_copy(), repeat)
+                noisy.append(repeat.repeated(op.repeat_count))
+            else:
+                noisy.append(op)

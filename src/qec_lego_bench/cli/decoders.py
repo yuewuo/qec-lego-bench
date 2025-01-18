@@ -27,7 +27,10 @@ class DecoderCli:
     def __init__(self, input: str):
         decoder_name, params = named_kwargs_of(input)
         if decoder_name not in registered_decoder_names:
-            print(f"[error] decoder name '{decoder_name}' not found", file=sys.stderr)
+            print(
+                f"[error] decoder name '{decoder_name}' not found, possible values: {', '.join(registered_decoder_names.keys())}",
+                file=sys.stderr,
+            )
             raise ValueError()
         cls, expected_params = registered_decoder_names[decoder_name]
         kwargs = {}

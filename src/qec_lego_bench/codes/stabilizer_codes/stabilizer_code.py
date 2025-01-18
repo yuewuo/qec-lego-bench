@@ -41,10 +41,8 @@ class StabilizerCode(Code, ABC):
         for logical_x, logical_z in self.logical_operators:
             assert len(logical_x) <= self.n
             assert len(logical_z) <= self.n
-            if self.prepare_logical_x_instead_of_z:
-                c.append("MPP", stim.target_combined_paulis(logical_x))
-            else:
-                c.append("MPP", stim.target_combined_paulis(logical_z))
+            logical = logical_x if self.prepare_logical_x_instead_of_z else logical_z
+            c.append("MPP", stim.target_combined_paulis(logical))
         bias = len(self.stabilizers) + len(self.logical_operators)
         # add errors at TICK positions
         c.append("TICK")
@@ -61,10 +59,8 @@ class StabilizerCode(Code, ABC):
             )
         # check logical errors by measuring the logical operators
         for logical_index, (logical_x, logical_z) in enumerate(self.logical_operators):
-            if self.prepare_logical_x_instead_of_z:
-                c.append("MPP", stim.target_combined_paulis(logical_x))
-            else:
-                c.append("MPP", stim.target_combined_paulis(logical_z))
+            logical = logical_x if self.prepare_logical_x_instead_of_z else logical_z
+            c.append("MPP", stim.target_combined_paulis(logical))
             c.append(
                 "OBSERVABLE_INCLUDE",
                 [stim.target_rec(-1), stim.target_rec(-1 - bias)],

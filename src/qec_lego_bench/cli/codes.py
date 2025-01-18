@@ -26,7 +26,10 @@ class CodeCli:
     def __init__(self, input: str):
         code_name, params = named_kwargs_of(input)
         if code_name not in registered_code_names:
-            print(f"[error] code name '{code_name}' not found", file=sys.stderr)
+            print(
+                f"[error] code name '{code_name}' not found, possible values: {', '.join(registered_code_names.keys())}",
+                file=sys.stderr,
+            )
             raise ValueError()
         cls, expected_params = registered_code_names[code_name]
         kwargs = {}

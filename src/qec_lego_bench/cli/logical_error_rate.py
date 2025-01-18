@@ -12,7 +12,7 @@ def logical_error_rate(
     # decoder_cli: DecoderCli,
     *,
     noise_cli: NoiseCli = "NoNoise",
-    max_shots: int = 1_000_000,
+    max_shots: int = 10_000_000,
     max_errors: int = 10_000,
     num_workers: int = 1,
 ):
