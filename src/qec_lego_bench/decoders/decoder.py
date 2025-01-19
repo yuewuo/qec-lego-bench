@@ -1,11 +1,7 @@
-from abc import ABC, abstractmethod
-import stim
+from qec_lego_bench.cli.decoders import decoder_cli
+from sinter._decoding._decoding_pymatching import PyMatchingDecoder
+from sinter._decoding._decoding_fusion_blossom import FusionBlossomDecoder
 
 
-class Decoder(ABC):
-    @staticmethod
-    @abstractmethod
-    def from_stim(circuit: stim.Circuit): ...
-
-    @abstractmethod
-    def decode(self, circuit: stim.Circuit) -> stim.Circuit: ...
+decoder_cli("pymatching", "mwpm")(PyMatchingDecoder)
+decoder_cli("fusion_blossom", "fb")(FusionBlossomDecoder)

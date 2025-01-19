@@ -4,20 +4,19 @@ import sys
 registered_code_names = {}
 
 
-def code_cli(code_name: str):
+def code_cli(*code_names: list[str]):
     def decorator(constructor):
         params = params_of_func_or_cls(constructor)
-        if code_name in registered_code_names:
-            print(
-                f"[warning] code name {code_name} already registered", file=sys.stderr
-            )
-        registered_code_names[code_name] = (constructor, params)
-
-        def wrapper(*args, **kwargs):
-            instance = constructor(*args, **kwargs)
-            return instance
-
-        return wrapper
+        for code_name in code_names:
+            assert code_name.isidentifier()
+            code_name = code_name.lower()
+            if code_name in registered_code_names:
+                print(
+                    f"[warning] code name {code_name} already registered",
+                    file=sys.stderr,
+                )
+            registered_code_names[code_name] = (constructor, params)
+        return constructor
 
     return decorator
 
@@ -25,6 +24,7 @@ def code_cli(code_name: str):
 class CodeCli:
     def __init__(self, input: str):
         code_name, params = named_kwargs_of(input)
+        code_name = code_name.lower()
         if code_name not in registered_code_names:
             print(
                 f"[error] code name '{code_name}' not found, possible values: {', '.join(registered_code_names.keys())}",
@@ -34,7 +34,9 @@ class CodeCli:
         cls, expected_params = registered_code_names[code_name]
         kwargs = {}
         for param in params:
-            assert param in expected_params, f"unexpected parameter '{param}'"
+            assert (
+                param in expected_params
+            ), f"unexpected parameter '{param}', expecting one of {', '.join(expected_params.keys())}"
             constructor = expected_params[param]
             kwargs[param] = constructor(params[param])
         try:

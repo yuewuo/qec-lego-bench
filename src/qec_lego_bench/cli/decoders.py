@@ -4,21 +4,19 @@ import sys
 registered_decoder_names = {}
 
 
-def decoder_cli(decoder_name: str):
+def decoder_cli(*decoder_names: list[str]):
     def decorator(constructor):
         params = params_of_func_or_cls(constructor)
-        if decoder_name in registered_decoder_names:
-            print(
-                f"[warning] decoder name {decoder_name} already registered",
-                file=sys.stderr,
-            )
-        registered_decoder_names[decoder_name] = (constructor, params)
-
-        def wrapper(*args, **kwargs):
-            instance = constructor(*args, **kwargs)
-            return instance
-
-        return wrapper
+        for decoder_name in decoder_names:
+            assert decoder_name.isidentifier()
+            decoder_name = decoder_name.lower()
+            if decoder_name in registered_decoder_names:
+                print(
+                    f"[warning] decoder name {decoder_name} already registered",
+                    file=sys.stderr,
+                )
+            registered_decoder_names[decoder_name] = (constructor, params)
+        return constructor
 
     return decorator
 
@@ -26,6 +24,7 @@ def decoder_cli(decoder_name: str):
 class DecoderCli:
     def __init__(self, input: str):
         decoder_name, params = named_kwargs_of(input)
+        decoder_name = decoder_name.lower()
         if decoder_name not in registered_decoder_names:
             print(
                 f"[error] decoder name '{decoder_name}' not found, possible values: {', '.join(registered_decoder_names.keys())}",
@@ -35,7 +34,9 @@ class DecoderCli:
         cls, expected_params = registered_decoder_names[decoder_name]
         kwargs = {}
         for param in params:
-            assert param in expected_params, f"unexpected parameter '{param}'"
+            assert (
+                param in expected_params
+            ), f"unexpected parameter '{param}', expecting one of {', '.join(expected_params.keys())}"
             constructor = expected_params[param]
             kwargs[param] = constructor(params[param])
         try:

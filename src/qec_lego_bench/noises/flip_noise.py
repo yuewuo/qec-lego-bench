@@ -4,7 +4,7 @@ from qec_lego_bench.cli.noises import noise_cli
 import stim
 
 
-@noise_cli("FlipNoise")
+@noise_cli("FlipNoise", "flip")
 @dataclass
 class FlipNoise(Noise):
     """
@@ -40,6 +40,11 @@ class FlipNoise(Noise):
             elif op.name == "REPEAT":
                 repeat = stim.Circuit()
                 self.add_noise_to(op.body_copy(), repeat)
-                noisy.append(repeat.repeated(op.repeat_count))
+                noisy.append(
+                    stim.CircuitRepeatBlock(
+                        body=repeat,
+                        repeat_count=op.repeat_count,
+                    )
+                )
             else:
                 noisy.append(op)

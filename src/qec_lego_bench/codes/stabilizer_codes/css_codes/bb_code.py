@@ -127,7 +127,7 @@ bb_code_params = [
 ]
 
 
-@code_cli("BBCode")
+@code_cli("BBCode", "bb")
 def bb_code_cli(n: int, k: int, d: int) -> BBCode:
     for params in bb_code_params:
         if params["nkd"] == (n, k, d):
