@@ -28,6 +28,14 @@ qec\_lego\_bench.decoders.bpuf module
    :undoc-members:
    :show-inheritance:
 
+qec\_lego\_bench.decoders.decoder module
+----------------------------------------
+
+.. automodule:: qec_lego_bench.decoders.decoder
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 qec\_lego\_bench.decoders.mwpf module
 -------------------------------------
 

@@ -19,9 +19,10 @@ class MWPF(sinter.Decoder):
         *,
         dem: stim.DetectorErrorModel,
     ) -> sinter.CompiledDecoder:
-        return MwpfDecoder().compile_decoder_for_dem(
+        return MwpfDecoder(
+            cluster_node_limit=self.cluster_node_limit
+        ).compile_decoder_for_dem(
             dem=dem,
-            cluster_node_limit=self.cluster_node_limit,
         )
 
     def decode_via_files(
@@ -35,7 +36,7 @@ class MWPF(sinter.Decoder):
         obs_predictions_b8_out_path: pathlib.Path,
         tmp_dir: pathlib.Path,
     ) -> None:
-        return MwpfDecoder().decode_via_files(
+        return MwpfDecoder(cluster_node_limit=self.cluster_node_limit).decode_via_files(
             num_shots=num_shots,
             num_dets=num_dets,
             num_obs=num_obs,
@@ -43,5 +44,4 @@ class MWPF(sinter.Decoder):
             dets_b8_in_path=dets_b8_in_path,
             obs_predictions_b8_out_path=obs_predictions_b8_out_path,
             tmp_dir=tmp_dir,
-            cluster_node_limit=self.cluster_node_limit,
         )
