@@ -12,6 +12,7 @@ def kwargs_of_qs(qs: str) -> dict[str, str]:
     """
     querystring = qs.replace(",", "&")
     dict_of_qs = parse_qs(querystring)
+    assert len(dict_of_qs) > 0 or qs == "", f"querystring '{qs}' is not valid"
     for key in dict_of_qs:
         assert key.isidentifier(), f"key '{key}' is not a valid identifier"
     return {key: value[0] for key, value in dict_of_qs.items()}

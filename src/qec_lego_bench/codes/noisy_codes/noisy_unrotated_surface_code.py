@@ -5,9 +5,9 @@ import stim
 from typing import Optional
 
 
-@code_cli("NoisyRotatedSurfaceCode", "noisy_rsc", "rsc")
+@code_cli("NoisyUnrotatedSurfaceCode", "noisy_usc", "usc")
 @dataclass
-class NoisyRotatedSurfaceCode(Code):
+class NoisyUnrotatedSurfaceCode(Code):
     d: int
     p: float = 0.0
     # if not specified, rounds = distance
@@ -19,7 +19,7 @@ class NoisyRotatedSurfaceCode(Code):
         assert self.p <= 1
         rounds = self.d if self.rounds is None else self.rounds
         assert self.basis.lower() in ["x", "y"]
-        code_task = "surface_code:rotated_memory_" + self.basis.lower()
+        code_task = "surface_code:unrotated_memory_" + self.basis.lower()
         self._circuit = stim.Circuit.generated(
             code_task,
             rounds=rounds,

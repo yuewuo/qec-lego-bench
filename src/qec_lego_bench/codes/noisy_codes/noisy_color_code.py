@@ -5,23 +5,20 @@ import stim
 from typing import Optional
 
 
-@code_cli("NoisyRotatedSurfaceCode", "noisy_rsc", "rsc")
+@code_cli("NoisyColorCode", "noisy_color", "color")
 @dataclass
-class NoisyRotatedSurfaceCode(Code):
+class NoisyColorCode(Code):
     d: int
     p: float = 0.0
     # if not specified, rounds = distance
     rounds: Optional[int] = None
-    basis: str = "X"
 
     def __post_init__(self):
         assert self.p >= 0
         assert self.p <= 1
         rounds = self.d if self.rounds is None else self.rounds
-        assert self.basis.lower() in ["x", "y"]
-        code_task = "surface_code:rotated_memory_" + self.basis.lower()
         self._circuit = stim.Circuit.generated(
-            code_task,
+            "color_code:memory_xyz",
             rounds=rounds,
             distance=self.d,
             after_clifford_depolarization=self.p,
