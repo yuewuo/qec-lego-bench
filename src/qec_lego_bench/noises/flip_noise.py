@@ -22,10 +22,7 @@ class FlipNoise(Noise):
 
     def _add_noise(self, circuit: stim.Circuit):
         all_qubits = list(range(circuit.num_qubits))
-        if self.p == 1:
-            circuit.append(self.basis, all_qubits)
-        elif self.p > 0:
-            circuit.append(self.basis + "_ERROR", all_qubits, self.p)
+        circuit.append(self.basis + "_ERROR", all_qubits, self.p)
 
     def __call__(self, circuit: stim.Circuit) -> stim.Circuit:
         noisy = stim.Circuit()
@@ -33,7 +30,7 @@ class FlipNoise(Noise):
         return noisy
 
     def add_noise_to(self, circuit: stim.Circuit, noisy: stim.Circuit):
-        for op in circuit:
+        for op in circuit:  # type: ignore
             if op.name == "TICK":
                 noisy.append(op)
                 self._add_noise(noisy)

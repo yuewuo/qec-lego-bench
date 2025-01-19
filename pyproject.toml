@@ -9,5 +9,5 @@ build-backend = "setuptools.build_meta"
 version_scheme = "no-guess-dev"
 
 [[tool.mypy.overrides]]
-module = ["mwpf.*", "stim.*"]
+module = ["mwpf.*", "stim.*", "pymatching.*", "fusion_blossom.*", "sinter.*"]
 follow_untyped_imports = true

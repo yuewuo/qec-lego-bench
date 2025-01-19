@@ -12,8 +12,8 @@ from ldpc.sinter_decoders import SinterBpOsdDecoder, SinterBeliefFindDecoder
 def logical_error_rate(
     code_cli: CodeCli,
     *,
-    noise_cli: NoiseCli = "NoNoise",
-    decoder_cli: DecoderCli = "mwpf",
+    noise_cli: NoiseCli = "NoNoise",  # type: ignore
+    decoder_cli: DecoderCli = "mwpf",  # type: ignore
     max_shots: int = 10_000_000,
     max_errors: int = 10_000,
     num_workers: int = 1,

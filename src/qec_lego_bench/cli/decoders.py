@@ -4,7 +4,7 @@ import sys
 registered_decoder_names = {}
 
 
-def decoder_cli(*decoder_names: list[str]):
+def decoder_cli(*decoder_names: str):
     def decorator(constructor):
         params = params_of_func_or_cls(constructor)
         for decoder_name in decoder_names:

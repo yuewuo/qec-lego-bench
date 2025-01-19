@@ -4,7 +4,7 @@ import sys
 registered_code_names = {}
 
 
-def code_cli(*code_names: list[str]):
+def code_cli(*code_names: str):
     def decorator(constructor):
         params = params_of_func_or_cls(constructor)
         for code_name in code_names:

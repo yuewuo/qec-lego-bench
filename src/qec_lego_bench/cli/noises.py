@@ -4,7 +4,7 @@ import sys
 registered_noise_names = {}
 
 
-def noise_cli(*noise_names: list[str]):
+def noise_cli(*noise_names: str):
 
     def decorator(constructor):
         params = params_of_func_or_cls(constructor)
