@@ -34,11 +34,11 @@ def logical_error_rate(
     sinter.collect(
         num_workers=num_workers,
         tasks=[task],
-        decoders=["custom"],
+        decoders=[str(decoder_cli)],
         # decoders=["mw_parity_factor"],
         # decoders=["bposd"],
         # decoders=["bposd1"],
         # decoders=["pymatching"],
         print_progress=True,
-        custom_decoders={"custom": decoder},
+        custom_decoders={str(decoder_cli): decoder},
     )

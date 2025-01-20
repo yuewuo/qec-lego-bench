@@ -25,6 +25,7 @@ def noise_cli(*noise_names: str):
 
 class NoiseCli:
     def __init__(self, input: str):
+        self.input = input
         noise_name, params = named_kwargs_of(input)
         noise_name = noise_name.lower()
         if noise_name not in registered_noise_names:
@@ -46,6 +47,9 @@ class NoiseCli:
         except Exception as e:
             print(f"[error] {e}", file=sys.stderr)
             raise e
+
+    def __str__(self):
+        return self.input
 
     def __call__(self):
         return self.noise

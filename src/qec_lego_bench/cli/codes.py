@@ -23,6 +23,7 @@ def code_cli(*code_names: str):
 
 class CodeCli:
     def __init__(self, input: str):
+        self.input = input
         code_name, params = named_kwargs_of(input)
         code_name = code_name.lower()
         if code_name not in registered_code_names:
@@ -44,6 +45,9 @@ class CodeCli:
         except Exception as e:
             print(f"[error] {e}", file=sys.stderr)
             raise e
+
+    def __str__(self):
+        return self.input
 
     def __call__(self):
         return self.code

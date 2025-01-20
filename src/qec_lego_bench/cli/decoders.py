@@ -23,6 +23,7 @@ def decoder_cli(*decoder_names: str):
 
 class DecoderCli:
     def __init__(self, input: str):
+        self.input = input
         decoder_name, params = named_kwargs_of(input)
         decoder_name = decoder_name.lower()
         if decoder_name not in registered_decoder_names:
@@ -44,6 +45,9 @@ class DecoderCli:
         except Exception as e:
             print(f"[error] {e}", file=sys.stderr)
             raise e
+
+    def __str__(self):
+        return self.input
 
     def __call__(self):
         return self.decoder
