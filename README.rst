@@ -4,15 +4,9 @@
     .. image:: https://api.cirrus-ci.com/github/<USER>/qec_lego_bench.svg?branch=main
         :alt: Built Status
         :target: https://cirrus-ci.com/github/<USER>/qec_lego_bench
-    .. image:: https://readthedocs.org/projects/qec_lego_bench/badge/?version=latest
-        :alt: ReadTheDocs
-        :target: https://qec_lego_bench.readthedocs.io/en/stable/
     .. image:: https://img.shields.io/coveralls/github/<USER>/qec_lego_bench/main.svg
         :alt: Coveralls
         :target: https://coveralls.io/r/<USER>/qec_lego_bench
-    .. image:: https://img.shields.io/pypi/v/qec_lego_bench.svg
-        :alt: PyPI-Server
-        :target: https://pypi.org/project/qec_lego_bench/
     .. image:: https://img.shields.io/conda/vn/conda-forge/qec_lego_bench.svg
         :alt: Conda-Forge
         :target: https://anaconda.org/conda-forge/qec_lego_bench
@@ -27,7 +21,13 @@
     :alt: Project generated with PyScaffold
     :target: https://pyscaffold.org/
 
-|
+.. image:: https://readthedocs.org/projects/qec_lego_bench/badge/?version=latest
+    :alt: ReadTheDocs
+    :target: https://qec_lego_bench.readthedocs.io/en/stable/
+
+.. image:: https://img.shields.io/pypi/v/qec_lego_bench.svg
+    :alt: PyPI-Server
+    :target: https://pypi.org/project/qec_lego_bench/
 
 ==============
 QEC Lego Bench
