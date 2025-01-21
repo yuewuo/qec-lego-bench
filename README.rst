@@ -16,18 +16,17 @@
     .. image:: https://img.shields.io/twitter/url/http/shields.io.svg?style=social&label=Twitter
         :alt: Twitter
         :target: https://twitter.com/qec_lego_bench
-
-.. image:: https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold
-    :alt: Project generated with PyScaffold
-    :target: https://pyscaffold.org/
+    .. image:: https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold
+        :alt: Project generated with PyScaffold
+        :target: https://pyscaffold.org/
 
 .. image:: https://readthedocs.org/projects/qec_lego_bench/badge/?version=latest
     :alt: ReadTheDocs
-    :target: https://qec_lego_bench.readthedocs.io/en/stable/
+    :target: https://qec-lego-bench.readthedocs.io/en/latest/
 
 .. image:: https://img.shields.io/pypi/v/qec_lego_bench.svg
     :alt: PyPI-Server
-    :target: https://pypi.org/project/qec_lego_bench/
+    :target: https://pypi.org/project/qec-lego-bench/
 
 ==============
 QEC Lego Bench
