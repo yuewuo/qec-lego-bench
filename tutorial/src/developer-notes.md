@@ -20,5 +20,6 @@ tox -av  # to list all the tasks available
 
 # To push a new version (and automatically publish to pypi and readthedocs.io):
 git commit -m "something"
-git push origin v0.0.x
+git tag v0.0.x-dev
+git push origin v0.0.x-dev
 ```
