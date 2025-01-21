@@ -23,24 +23,24 @@ def decoder_cli(*decoder_names: str):
 
 class DecoderCli:
     def __init__(self, input: str):
-        self.input = input
-        decoder_name, params = named_kwargs_of(input)
-        decoder_name = decoder_name.lower()
-        if decoder_name not in registered_decoder_names:
-            print(
-                f"[error] decoder name '{decoder_name}' not found, possible values: {', '.join(registered_decoder_names.keys())}",
-                file=sys.stderr,
-            )
-            raise ValueError()
-        cls, expected_params = registered_decoder_names[decoder_name]
-        kwargs = {}
-        for param in params:
-            assert (
-                param in expected_params
-            ), f"unexpected parameter '{param}', expecting one of {', '.join(expected_params.keys())}"
-            constructor = expected_params[param]
-            kwargs[param] = constructor(params[param])
         try:
+            self.input = input
+            decoder_name, params = named_kwargs_of(input)
+            decoder_name = decoder_name.lower()
+            if decoder_name not in registered_decoder_names:
+                print(
+                    f"[error] decoder name '{decoder_name}' not found, possible values: {', '.join(registered_decoder_names.keys())}",
+                    file=sys.stderr,
+                )
+                raise ValueError()
+            cls, expected_params = registered_decoder_names[decoder_name]
+            kwargs = {}
+            for param in params:
+                assert (
+                    param in expected_params
+                ), f"unexpected parameter '{param}', expecting one of {', '.join(expected_params.keys())}"
+                constructor = expected_params[param]
+                kwargs[param] = constructor(params[param])
             self.decoder = cls(**kwargs)
         except Exception as e:
             print(f"[error] {e}", file=sys.stderr)

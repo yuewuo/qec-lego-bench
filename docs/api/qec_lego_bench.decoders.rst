@@ -44,14 +44,6 @@ qec\_lego\_bench.decoders.decoder module
    :undoc-members:
    :show-inheritance:
 
-qec\_lego\_bench.decoders.mwpf module
--------------------------------------
-
-.. automodule:: qec_lego_bench.decoders.mwpf
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 

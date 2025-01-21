@@ -1,4 +1,5 @@
 from typing import Any
+import typing
 from urllib.parse import parse_qs
 import inspect
 import types
@@ -43,7 +44,10 @@ def params_of_func_or_cls(func: Any) -> dict[str, Any]:
     signature = inspect.signature(func)
     params = {}
     for param in list(signature.parameters.values()):
-        if isinstance(param.annotation, types.UnionType):
+        if (
+            isinstance(param.annotation, types.UnionType)
+            or typing.get_origin(param.annotation) == typing.Union
+        ):
             args = [arg for arg in param.annotation.__args__ if arg != type(None)]
             assert len(args) == 1, "only support Union[TYPE, None] for now"
             assert (

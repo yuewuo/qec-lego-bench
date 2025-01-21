@@ -37,6 +37,9 @@ QEC Lego Bench
     A benchmark suite for quantum error correction decoding system following the LEGO architecture.
 
 
+    Current Status: very early development and may not be ready for use. Though sometimes it may allow others to quickly rerun the simulation in my paper so it's worth sharing. Especially, the command line tool allows running the simulation with zero lines of programming.
+
+
 Real-time QEC decoding is needed for large-scale fault-tolerant quantum computation.
 Yet there exists no standard way to benchmark the performance of QEC decoders, both in terms of speed and accuracy, across different quantum error models and code sizes.
 This project aims to provide a benchmark suite for QEC decoders following the LEGO architecture, which is a modular and extensible architecture for QEC decoders.
@@ -49,6 +52,7 @@ It will not be sufficient for software implementations to generate the real-time
 such that hardware-accelerated simulators can be plugged into the evaluation suite.
 Ultimately, the benchmark suite should get rid of the need for software if all the data are exchanged within an FPGA.
 In that case, the benchmark suite merely becomes a host that configures the hardware to run both Clifford circuit simulator and the real-time decoding system.
+
 
 
 .. _pyscaffold-notes:

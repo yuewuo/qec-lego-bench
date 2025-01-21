@@ -25,24 +25,24 @@ def noise_cli(*noise_names: str):
 
 class NoiseCli:
     def __init__(self, input: str):
-        self.input = input
-        noise_name, params = named_kwargs_of(input)
-        noise_name = noise_name.lower()
-        if noise_name not in registered_noise_names:
-            print(
-                f"[error] noise name '{noise_name}' not found, possible values: {', '.join(registered_noise_names.keys())}",
-                file=sys.stderr,
-            )
-            raise ValueError()
-        cls, expected_params = registered_noise_names[noise_name]
-        kwargs = {}
-        for param in params:
-            assert (
-                param in expected_params
-            ), f"unexpected parameter '{param}', expecting one of {', '.join(expected_params.keys())}"
-            constructor = expected_params[param]
-            kwargs[param] = constructor(params[param])
         try:
+            self.input = input
+            noise_name, params = named_kwargs_of(input)
+            noise_name = noise_name.lower()
+            if noise_name not in registered_noise_names:
+                print(
+                    f"[error] noise name '{noise_name}' not found, possible values: {', '.join(registered_noise_names.keys())}",
+                    file=sys.stderr,
+                )
+                raise ValueError()
+            cls, expected_params = registered_noise_names[noise_name]
+            kwargs = {}
+            for param in params:
+                assert (
+                    param in expected_params
+                ), f"unexpected parameter '{param}', expecting one of {', '.join(expected_params.keys())}"
+                constructor = expected_params[param]
+                kwargs[param] = constructor(params[param])
             self.noise = cls(**kwargs)
         except Exception as e:
             print(f"[error] {e}", file=sys.stderr)

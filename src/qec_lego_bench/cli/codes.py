@@ -23,24 +23,24 @@ def code_cli(*code_names: str):
 
 class CodeCli:
     def __init__(self, input: str):
-        self.input = input
-        code_name, params = named_kwargs_of(input)
-        code_name = code_name.lower()
-        if code_name not in registered_code_names:
-            print(
-                f"[error] code name '{code_name}' not found, possible values: {', '.join(registered_code_names.keys())}",
-                file=sys.stderr,
-            )
-            raise ValueError()
-        cls, expected_params = registered_code_names[code_name]
-        kwargs = {}
-        for param in params:
-            assert (
-                param in expected_params
-            ), f"unexpected parameter '{param}', expecting one of {', '.join(expected_params.keys())}"
-            constructor = expected_params[param]
-            kwargs[param] = constructor(params[param])
         try:
+            self.input = input
+            code_name, params = named_kwargs_of(input)
+            code_name = code_name.lower()
+            if code_name not in registered_code_names:
+                print(
+                    f"[error] code name '{code_name}' not found, possible values: {', '.join(registered_code_names.keys())}",
+                    file=sys.stderr,
+                )
+                raise ValueError()
+            cls, expected_params = registered_code_names[code_name]
+            kwargs = {}
+            for param in params:
+                assert (
+                    param in expected_params
+                ), f"unexpected parameter '{param}', expecting one of {', '.join(expected_params.keys())}"
+                constructor = expected_params[param]
+                kwargs[param] = constructor(params[param])
             self.code = cls(**kwargs)
         except Exception as e:
             print(f"[error] {e}", file=sys.stderr)
