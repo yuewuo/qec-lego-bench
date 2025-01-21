@@ -3,3 +3,10 @@
 # under `install_requires` in `setup.cfg` is also listed here!
 sphinx>=3.2.1
 # sphinx_rtd_theme
+nbsphinx>=0.8.6
+ipython>=7.16.1
+jupyter>=1.0.0
+pygments>=2.7.2
+pandoc>=2.4.0
+mwpf>=0.2.5
+mwpf_rational>=0.2.5
