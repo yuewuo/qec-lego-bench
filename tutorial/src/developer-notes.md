@@ -17,4 +17,8 @@ tox -e build  # to build your package distribution
 tox -e publish  # to test your project uploads correctly in test.pypi.org
 tox -e publish -- --repository pypi  # to release your package to PyPI
 tox -av  # to list all the tasks available
+
+# To push a new version (and automatically publish to pypi and readthedocs.io):
+git commit -m "something"
+git push origin v0.0.x
 ```

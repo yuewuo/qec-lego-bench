@@ -29,6 +29,18 @@ class CSSCode(StabilizerCode, ABC):
     def stabilizers(self) -> list[stim.PauliString]:
         return self._stabilizers
 
+    @property
+    def x_stabilizer_coordinates(self) -> list[tuple[float, float, float] | None]:
+        return [None] * len(self.H_X.shape[1])
+
+    @property
+    def z_stabilizer_coordinates(self) -> list[tuple[float, float, float] | None]:
+        return [None] * len(self.H_Z.shape[1])
+
+    @property
+    def stabilizer_coordinates(self) -> list[tuple[float, float, float] | None]:
+        return self.x_stabilizer_coordinates + self.z_stabilizer_coordinates
+
     def __init__(self):
         self.css_init_stabilizers()
         super().__init__()
