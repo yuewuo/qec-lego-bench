@@ -1,6 +1,5 @@
-from qec_lego_bench.codes.stabilizer_codes import StabilizerCode
+from qec_lego_bench.codes.stabilizer_codes import StabilizerCode, Coordinates
 from abc import ABC, abstractmethod
-from galois.typing import ArrayLike
 import stim
 from galois import GF2
 import numpy as np
@@ -10,11 +9,11 @@ class CSSCode(StabilizerCode, ABC):
 
     @property
     @abstractmethod
-    def H_X(self) -> ArrayLike: ...
+    def H_X(self) -> np.ndarray: ...
 
     @property
     @abstractmethod
-    def H_Z(self) -> ArrayLike: ...
+    def H_Z(self) -> np.ndarray: ...
 
     def css_init_stabilizers(self):
         assert (self.H_X @ self.H_Z.T == 0).all(), "X and Z checks must commute"
@@ -30,15 +29,15 @@ class CSSCode(StabilizerCode, ABC):
         return self._stabilizers
 
     @property
-    def x_stabilizer_coordinates(self) -> list[tuple[float, float, float] | None]:
+    def x_stabilizer_coordinates(self) -> Coordinates:
         return [None] * self.H_X.shape[1]
 
     @property
-    def z_stabilizer_coordinates(self) -> list[tuple[float, float, float] | None]:
+    def z_stabilizer_coordinates(self) -> Coordinates:
         return [None] * self.H_Z.shape[1]
 
     @property
-    def stabilizer_coordinates(self) -> list[tuple[float, float, float] | None]:
+    def stabilizer_coordinates(self) -> Coordinates:
         return self.x_stabilizer_coordinates + self.z_stabilizer_coordinates
 
     def __init__(self):
@@ -52,7 +51,7 @@ class CSSCode(StabilizerCode, ABC):
 
 def construct_logical_checks(
     logical_operators: list[tuple[stim.PauliString, stim.PauliString]],
-) -> tuple[ArrayLike, ArrayLike]:
+) -> tuple[np.ndarray, np.ndarray]:
     height = len(logical_operators)
     width = len(logical_operators[0][0])
     L_X = GF2(np.zeros((height, width), dtype=np.uint8))

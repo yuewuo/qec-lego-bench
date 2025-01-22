@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from qec_lego_bench.codes.code import Code
+from typing import List
 import stim
+
+Coordinates = List[tuple[float, float, float] | None]
 
 
 class StabilizerCode(Code, ABC):
@@ -85,11 +88,11 @@ class StabilizerCode(Code, ABC):
         return self._circuit
 
     @property
-    def qubit_coordinates(self) -> list[tuple[float, float, float] | None]:
+    def qubit_coordinates(self) -> Coordinates:
         return [None] * self.n
 
     @property
-    def stabilizer_coordinates(self) -> list[tuple[float, float, float] | None]:
+    def stabilizer_coordinates(self) -> Coordinates:
         return [None] * len(self.stabilizers)
 
     @property

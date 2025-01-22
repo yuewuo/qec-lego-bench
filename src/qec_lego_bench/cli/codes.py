@@ -1,5 +1,5 @@
 from .util import named_kwargs_of, params_of_func_or_cls
-from typing import Union
+from typing import Union, Any
 import sys
 
 registered_code_names = {}
@@ -25,8 +25,8 @@ def code_cli(*code_names: str):
 class CodeCli:
     def __init__(self, input: Union[str, "CodeCli"]):
         if isinstance(input, CodeCli):
-            self.input = input.input
-            self.code = input.code
+            self.input: str = input.input
+            self.code: Any = input.code
             return
         try:
             self.input = input

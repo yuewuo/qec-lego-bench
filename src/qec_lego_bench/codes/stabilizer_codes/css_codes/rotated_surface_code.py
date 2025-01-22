@@ -1,4 +1,4 @@
-from qec_lego_bench.codes.stabilizer_codes.css_codes import CSSCode
+from qec_lego_bench.codes.stabilizer_codes.css_codes import CSSCode, Coordinates
 from dataclasses import dataclass
 from galois import GF2
 import numpy as np
@@ -43,9 +43,9 @@ class RotatedSurfaceCode(CSSCode):
 
         self._H_X = GF2(np.zeros((s, n), dtype=np.uint8))
         self._H_Z = GF2(np.zeros((s, n), dtype=np.uint8))
-        self._qubit_coordinates = [None] * n
-        self._x_stabilizer_coordinates = [None] * s
-        self._z_stabilizer_coordinates = [None] * s
+        self._qubit_coordinates: Coordinates = [None] * n
+        self._x_stabilizer_coordinates: Coordinates = [None] * s
+        self._z_stabilizer_coordinates: Coordinates = [None] * s
         for i in range(d):
             for j in range(d):
                 self._qubit_coordinates[index_of(i, j)] = (i, j, 0)
@@ -82,21 +82,21 @@ class RotatedSurfaceCode(CSSCode):
         assert len(self.logical_operators) == 1
 
     @property
-    def H_X(self) -> ArrayLike:
+    def H_X(self) -> np.ndarray:
         return self._H_X
 
     @property
-    def H_Z(self) -> ArrayLike:
+    def H_Z(self) -> np.ndarray:
         return self._H_Z
 
     @property
-    def qubit_coordinates(self) -> list[tuple[float, float, float] | None]:
+    def qubit_coordinates(self) -> Coordinates:
         return self._qubit_coordinates
 
     @property
-    def x_stabilizer_coordinates(self) -> list[tuple[float, float, float] | None]:
+    def x_stabilizer_coordinates(self) -> Coordinates:
         return self._x_stabilizer_coordinates
 
     @property
-    def z_stabilizer_coordinates(self) -> list[tuple[float, float, float] | None]:
+    def z_stabilizer_coordinates(self) -> Coordinates:
         return self._z_stabilizer_coordinates

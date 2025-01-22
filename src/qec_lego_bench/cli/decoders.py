@@ -1,6 +1,6 @@
 from .util import named_kwargs_of, params_of_func_or_cls
 import sys
-from typing import Union
+from typing import Union, Any
 
 registered_decoder_names = {}
 
@@ -25,8 +25,8 @@ def decoder_cli(*decoder_names: str):
 class DecoderCli:
     def __init__(self, input: Union[str, "DecoderCli"]):
         if isinstance(input, DecoderCli):
-            self.input = input.input
-            self.decoder = input.decoder
+            self.input: str = input.input
+            self.decoder: Any = input.decoder
             return
         try:
             self.input = input

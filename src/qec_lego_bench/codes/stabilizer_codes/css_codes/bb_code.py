@@ -66,11 +66,11 @@ class BBCode(CSSCode):
         assert len(self.logical_operators) == k
 
     @property
-    def H_X(self) -> ArrayLike:
+    def H_X(self) -> np.ndarray:
         return self._H_X
 
     @property
-    def H_Z(self) -> ArrayLike:
+    def H_Z(self) -> np.ndarray:
         return self._H_Z
 
     def __str__(self) -> str:

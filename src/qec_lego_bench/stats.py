@@ -49,7 +49,7 @@ class Stats:
         )
 
     @property
-    def failure_rate(self) -> ufloat:
+    def failure_rate(self):
         return ufloat(self.failure_rate_value, self.failure_rate_uncertainty)
 
     def __str__(self) -> str:

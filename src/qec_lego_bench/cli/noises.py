@@ -1,6 +1,6 @@
 from .util import named_kwargs_of, params_of_func_or_cls
 import sys
-from typing import Union
+from typing import Union, Any
 
 registered_noise_names = {}
 
@@ -27,8 +27,8 @@ def noise_cli(*noise_names: str):
 class NoiseCli:
     def __init__(self, input: Union[str, "NoiseCli"]):
         if isinstance(input, NoiseCli):
-            self.input = input.input
-            self.noise = input.noise
+            self.input: str = input.input
+            self.noise: Any = input.noise
             return
         try:
             self.input = input

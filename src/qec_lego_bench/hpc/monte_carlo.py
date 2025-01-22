@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Protocol
+from typing import Any, Protocol, Optional
 
 
 class MonteCarloResult(Protocol):
@@ -11,7 +11,7 @@ class MonteCarloJob:
     args: dict[str, Any] = field(default_factory=dict)
     finished_shots: int = 0
     pending_shots: int = 0
-    result: MonteCarloResult
+    result: Optional[MonteCarloResult] = None
 
     @property
     def expecting_shots(self) -> int:

@@ -2,9 +2,6 @@ import arguably
 import sinter
 from typing import Optional, TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from tqdm.autonotebook import tqdm
-
 from .util import *
 from .codes import *
 from .noises import *
@@ -70,6 +67,8 @@ def logical_error_rate(
 
 class SinterProgressBar:
     def __init__(self, name: str, max_shots: int, max_errors: int):
+        from tqdm.autonotebook import tqdm  # type: ignore
+
         self.max_shots = max_shots
         self.max_errors = max_errors
         self.pbar_n: Optional[tqdm] = None
@@ -80,7 +79,7 @@ class SinterProgressBar:
         if len(progress.new_stats) == 0:
             # do nothing for the initial callback, no progress bar created
             return
-        from tqdm.autonotebook import tqdm
+        from tqdm.autonotebook import tqdm  # type: ignore
 
         stats = Stats(progress.new_stats[0])
         lines = progress.status_message.split("\n")

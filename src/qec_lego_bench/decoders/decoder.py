@@ -1,8 +1,8 @@
 from qec_lego_bench.cli.decoders import decoder_cli
 from sinter._decoding._decoding_pymatching import PyMatchingDecoder
 from sinter._decoding._decoding_fusion_blossom import FusionBlossomDecoder
-from mwpf import SinterMWPFDecoder, SinterHUFDecoder, SinterSingleHairDecoder
-from mwpf_rational import (
+from mwpf import SinterMWPFDecoder, SinterHUFDecoder, SinterSingleHairDecoder  # type: ignore
+from mwpf_rational import (  # type: ignore
     SinterMWPFRationalDecoder,
     SinterHUFRationalDecoder,
     SinterSingleHairRationalDecoder,
