@@ -23,6 +23,14 @@ qec\_lego\_bench.skeleton module
    :undoc-members:
    :show-inheritance:
 
+qec\_lego\_bench.stats module
+-----------------------------
+
+.. automodule:: qec_lego_bench.stats
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
