@@ -1,5 +1,6 @@
 from .util import named_kwargs_of, params_of_func_or_cls
 import sys
+from typing import Union
 
 registered_decoder_names = {}
 
@@ -22,7 +23,11 @@ def decoder_cli(*decoder_names: str):
 
 
 class DecoderCli:
-    def __init__(self, input: str):
+    def __init__(self, input: Union[str, "DecoderCli"]):
+        if isinstance(input, DecoderCli):
+            self.input = input.input
+            self.decoder = input.decoder
+            return
         try:
             self.input = input
             decoder_name, params = named_kwargs_of(input)

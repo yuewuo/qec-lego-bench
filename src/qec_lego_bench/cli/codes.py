@@ -1,4 +1,5 @@
 from .util import named_kwargs_of, params_of_func_or_cls
+from typing import Union
 import sys
 
 registered_code_names = {}
@@ -22,7 +23,11 @@ def code_cli(*code_names: str):
 
 
 class CodeCli:
-    def __init__(self, input: str):
+    def __init__(self, input: Union[str, "CodeCli"]):
+        if isinstance(input, CodeCli):
+            self.input = input.input
+            self.code = input.code
+            return
         try:
             self.input = input
             code_name, params = named_kwargs_of(input)

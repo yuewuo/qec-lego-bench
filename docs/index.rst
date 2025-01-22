@@ -36,6 +36,7 @@ Contents
    Changelog <changelog>
    Module Reference <api/modules>
    Introduction <notebooks/Introduction.ipynb>
+   Preliminary Decoder Comparison <notebooks/preliminary-decoder-compare.ipynb>
 
 
 Indices and tables

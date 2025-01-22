@@ -4,6 +4,8 @@ from . import cli
 from . import codes
 from . import decoders
 from . import noises
+import json_fix  # to use __json__ and let decoders be serializable
+from .stats import *
 
 try:
     # Change here if project is renamed and does not equal the package name
