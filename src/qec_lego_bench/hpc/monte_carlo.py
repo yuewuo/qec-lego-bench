@@ -9,10 +9,11 @@ from typing import (
     Tuple,
     Concatenate,
     cast,
+    Sequence,
 )
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
-from distributed import Future, Client, wait
+from distributed import Future, Client, wait, TimeoutError as DaskTimeoutError
 from concurrent.futures._base import DoneAndNotDoneFutures, FIRST_COMPLETED
 from concurrent.futures import Future as ConcurrentFuture
 import functools
@@ -21,6 +22,9 @@ import sys
 import math
 import sinter
 from qec_lego_bench.stats import Stats
+import json
+import portalocker
+import os
 
 
 class MonteCarloResult(Protocol):
@@ -108,6 +112,12 @@ class MonteCarloJob:
         self.duration: float = 0  # overall time of the finished shots
         self.result: Optional[MonteCarloResult] = None
 
+    def __repr__(self):
+        args = [str(arg) for arg in self.args]
+        for key in self.kwargs.keys():
+            args.append(f"{key}={self.kwargs[key]}")
+        return f"Job({', '.join(args)})"
+
     @property
     def args(self) -> tuple:
         return self._params.args
@@ -180,9 +190,11 @@ class MonteCarloJobExecutor:
         self,
         client: Client,
         func: MonteCarloFunc,
-        jobs,
+        jobs: Sequence[MonteCarloJob],
         config: Optional[MonteCarloExecutorConfig] = None,
         filename: Optional[str] = None,
+        # used when reading from file
+        result_type: Type[MonteCarloResult] = LogicalErrorResult,
     ) -> None:
         assert isinstance(client, Client)
         assert callable(func)
@@ -192,6 +204,10 @@ class MonteCarloJobExecutor:
         self.pending_futures: list[Future] = []
         self.future_info: dict[Future, MonteCarloJob] = {}
         self.config = config or MonteCarloExecutorConfig()
+        self.filename = filename
+        self.result_type = result_type
+        if filename is not None:
+            self.load_from_file(filename)  # load from file on initialization
 
     def __iter__(self) -> Iterator[MonteCarloJob]:
         for job in self.jobs.values():
@@ -222,12 +238,15 @@ class MonteCarloJobExecutor:
             while True:
                 remaining_time = timeout - (time.time() - start)
                 if remaining_time <= 0:
-                    break
-                futures: DoneAndNotDoneFutures = wait(
-                    self.pending_futures,
-                    return_when=FIRST_COMPLETED,
-                    timeout=timeout - (time.time() - start),
-                )
+                    raise TimeoutError()
+                try:
+                    futures: DoneAndNotDoneFutures = wait(
+                        self.pending_futures,
+                        return_when=FIRST_COMPLETED,
+                        timeout=timeout - (time.time() - start),
+                    )
+                except DaskTimeoutError as e:
+                    raise TimeoutError()
                 for done in futures.done:
                     assert isinstance(done, Future)
                     job = self.future_info[done]
@@ -258,9 +277,9 @@ class MonteCarloJobExecutor:
                     next = next_job(self)
                 for job in list(pending_submit.keys()):
                     shots, done_future = pending_submit[job]
-                    del pending_submit[job]
                     if not done_future.done():
                         continue  # keep waiting
+                    del pending_submit[job]
                     shots_per_thread, threads = self.config.warmed_up_split(job, shots)
                     for _ in range(threads):
                         future = self.client.submit(
@@ -278,6 +297,9 @@ class MonteCarloJobExecutor:
                     else:
                         # adjust actual pending shots
                         job.pending_shots += actual_shots - shots
+                # save to file
+                if self.filename is not None:
+                    self.update_file(self.filename)
                 # call user callback such that they can do some plotting of the intermediate results
                 if loop_callback is not None:
                     loop_callback(self)
@@ -288,5 +310,68 @@ class MonteCarloJobExecutor:
             for future in self.pending_futures:
                 future.cancel()
             self.pending_futures = []
+            self.future_info.clear()
             for job in self:
                 job.pending_shots = 0
+
+    def load_from_file(self, filename: str) -> None:
+        if not os.path.exists(filename):
+            return
+        with portalocker.Lock(filename, "r") as f:
+            persist = json.load(f)
+            for job in self.jobs.values():
+                job_key = str(hash(job))
+                if job_key not in persist:
+                    continue
+                entry = persist[job_key]
+                # sanity check
+                for entry_arg, arg in zip(entry["args"], job.args):
+                    assert entry_arg == str(arg), "Hash conflict"
+                assert entry["kwargs"].keys() == job.kwargs.keys(), "Hash conflict"
+                for key in job.kwargs.keys():
+                    assert entry["kwargs"][key] == str(job.kwargs[key]), "Hash conflict"
+                # add to current value
+                job.result = (
+                    None
+                    if entry["result"] is None
+                    else self.result_type.from_dict(entry["result"])
+                )
+                job.finished_shots = entry["shots"]
+                job.duration = entry["duration"]
+
+    def update_file(self, filename: str) -> None:
+        with portalocker.Lock(filename, "w+") as f:
+            content = f.read()
+            if content == "":
+                persist = {}
+            else:
+                persist = json.loads(content)
+            f.seek(0)
+            for job in self.jobs.values():
+                job_key = str(hash(job))
+                if job_key not in persist:
+                    persist[job_key] = {
+                        "args": [str(arg) for arg in job.args],
+                        "kwargs": {
+                            key: str(value) for key, value in job.kwargs.items()
+                        },
+                    }
+                    entry = persist[job_key]
+                else:
+                    entry = persist[job_key]
+                    # sanity check
+                    for entry_arg, arg in zip(entry["args"], job.args):
+                        assert entry_arg == str(arg), "Hash conflict"
+                    assert entry["kwargs"].keys() == job.kwargs.keys(), "Hash conflict"
+                    for key in job.kwargs.keys():
+                        assert entry["kwargs"][key] == str(
+                            job.kwargs[key]
+                        ), "Hash conflict"
+                # update value
+                entry["result"] = (
+                    job.result.to_dict() if job.result is not None else None
+                )
+                entry["shots"] = job.finished_shots
+                entry["duration"] = job.duration
+            json.dump(persist, f, indent=2)
+            f.truncate()
