@@ -10,6 +10,7 @@ from typing import (
     Concatenate,
     cast,
     Sequence,
+    Iterable,
 )
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
@@ -67,8 +68,8 @@ MonteCarloFunc = Callable[Concatenate[int, ...], MonteCarloResult]
 """
 A function to decide which is the next job to run and how many shots to run
 """
-MonteCarloNextJob = Callable[
-    ["MonteCarloJobExecutor"], Optional[Tuple["MonteCarloJob", int]]
+MonteCarloNextJobs = Callable[
+    ["MonteCarloJobExecutor"], Iterable[Tuple["MonteCarloJob", int]]
 ]
 
 
@@ -225,7 +226,7 @@ class MonteCarloJobExecutor:
 
     def execute(
         self,
-        next_job: MonteCarloNextJob,
+        next_jobs: MonteCarloNextJobs,
         timeout: float = sys.float_info.max,
         loop_callback: Optional[Callable[["MonteCarloJobExecutor"], None]] = None,
     ) -> None:
@@ -261,9 +262,7 @@ class MonteCarloJobExecutor:
                     del self.future_info[done]
                 self.pending_futures = list(futures.not_done)  # type: ignore
                 # get the next job to run
-                next = next_job(self)
-                while next is not None:
-                    job, shots = next
+                for job, shots in next_jobs(self):
                     # submit jobs such that it runs for this number of shots
                     job.pending_shots += shots
                     if job in pending_submit:
@@ -274,7 +273,6 @@ class MonteCarloJobExecutor:
                         mock_future: ConcurrentFuture = ConcurrentFuture()
                         mock_future.set_result(0)
                         pending_submit[job] = shots, cast(Future, mock_future)
-                    next = next_job(self)
                 for job in list(pending_submit.keys()):
                     shots, done_future = pending_submit[job]
                     if not done_future.done():
