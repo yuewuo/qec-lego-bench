@@ -2,12 +2,15 @@ from ..monte_carlo import *
 import matplotlib.pyplot as plt
 from IPython import display
 from dataclasses import field
+from typing import Optional
 
 
 @dataclass
 class LogicalErrorRatePlotter:
     d_vec: list[int]
     p_vec: list[float]
+    xlim: Optional[tuple[float, float]] = None
+    ylim: Optional[tuple[float, float]] = None
 
     hdisplay: display.DisplayHandle = field(
         default_factory=lambda: display.display("", display_id=True)
@@ -18,9 +21,15 @@ class LogicalErrorRatePlotter:
         ax.clear()
         ax.set_xlabel("physical error rate $p$")
         ax.set_ylabel("logical error rate $p_L$")
-        ax.set_xlim(min(self.p_vec) / 2, max(self.p_vec) * 2)
+        if self.xlim is not None:
+            ax.set_xlim(*self.xlim)
+        else:
+            ax.set_xlim(min(self.p_vec) / 2, max(self.p_vec) * 2)
         ax.set_xscale("log")
-        ax.set_ylim(1e-4, 1)
+        if self.ylim is not None:
+            ax.set_ylim(*self.ylim)
+        else:
+            ax.set_ylim(1e-4, 1)
         ax.set_yscale("log")
         for d in self.d_vec:
             x_vec = []
