@@ -1,6 +1,15 @@
 qec\_lego\_bench.hpc package
 ============================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   qec_lego_bench.hpc.plotter
+   qec_lego_bench.hpc.submitter
+
 Submodules
 ----------
 
