@@ -1,0 +1,1192 @@
+{
+  "bd3a0fb2912af82f2b5efabfe4cdcbb4a824d6e97f54c8454236885f75fac7387b9761f24b5971ab34d18525e3b7c91683623b152d283ead52356b7389fa8f8e": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.022496826279973674"
+    },
+    "result": {
+      "errors": 7475,
+      "discards": 0
+    },
+    "shots": 36969,
+    "duration": 134.18055272102356
+  },
+  "c4191c9521c6a8af177d8daa78c68a4db38986ee28e856d0003cfef10b1f3efb28c67337b415a817ecb15abbc79a5d0cd1da8df6e6bf61d5bcf89bb3beea6294": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.016870239755710472"
+    },
+    "result": {
+      "errors": 7569,
+      "discards": 0
+    },
+    "shots": 57353,
+    "duration": 152.0793957710266
+  },
+  "5ce7efba0335f929b3443d22fc2ca10be5397fb4c1afd54e00a8054250296462851b2973849b1be53350b5fa7795dfa88d490ee43fa355ca515bdead232a5bf5": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.012650895102857468"
+    },
+    "result": {
+      "errors": 7398,
+      "discards": 0
+    },
+    "shots": 87118,
+    "duration": 143.59613633155823
+  },
+  "44df39107fb91abfe2faf72ee4b716d742136d780880eaaf0357bb260b341d17d6a189cc153f3c96b2f42e989d7bc58dbbd49865fcf9f938e8f1a16940fa4392": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.009486832980505138"
+    },
+    "result": {
+      "errors": 7507,
+      "discards": 0
+    },
+    "shots": 147376,
+    "duration": 167.16491103172302
+  },
+  "5daed5955f8a4a5e6f721d03658eff61118832a9b761ab3396eb6a8b073a1c33ecfab72f68bcd9d8b512c0de825169ee4785eca42d65ab3c21456a205c535f61": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.007114121116984966"
+    },
+    "result": {
+      "errors": 7396,
+      "discards": 0
+    },
+    "shots": 248785,
+    "duration": 168.74412512779236
+  },
+  "d96755a805494d1f0d8b05dc299d8a7f9d8e5bed26aa4d3b5aa323de90645cfa4d7dccef39bd2658a21f1952f6eafa7fc6b3b3113b730ef94a67adc2eb78f6f8": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.005334838230116768"
+    },
+    "result": {
+      "errors": 7398,
+      "discards": 0
+    },
+    "shots": 435721,
+    "duration": 184.14398884773254
+  },
+  "7df62bd413c1cb7801d61edb8e7a6abb521b0e717e413b56ef867158083f408caa642010e6019b3267dac531f1c992a2e95e3da0528e6a66d3ba25d381fc81af": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.004000564296489972"
+    },
+    "result": {
+      "errors": 7427,
+      "discards": 0
+    },
+    "shots": 746720,
+    "duration": 213.61892318725586
+  },
+  "2bb3ff021ab98a412e497dbcf0dc4ca316f5168b362efe28effa793feeda343e1f138d1bf2ecbe5a2ca7616738ad0a8c1e28942d6119f71bf5663943b60912ae": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.003"
+    },
+    "result": {
+      "errors": 7396,
+      "discards": 0
+    },
+    "shots": 1320500,
+    "duration": 241.24530410766602
+  },
+  "a5693be4e004eba1f090b37592bcb79cdaa75d898f0482f6a8da83d8ea295be542a6b510c860946720722f16a34feef0917016954c4cab826914fa41db183b5c": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.002249682627997368"
+    },
+    "result": {
+      "errors": 7398,
+      "discards": 0
+    },
+    "shots": 2306050,
+    "duration": 303.953982591629
+  },
+  "2bd604fedd35ee8110f34354615563fc19fe48329c381a3be479b8adeae48f508430c44fbbddc9253010f3418d128334b7a6bd037ea442b7b96f43b72148f779": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.0016870239755710473"
+    },
+    "result": {
+      "errors": 7509,
+      "discards": 0
+    },
+    "shots": 4206529,
+    "duration": 332.5399544239044
+  },
+  "1f25cab99cc8f0ae2965d5bbf296580fdc30400b768dd0029dee1120ca47562f6696835a45d8a85baa956eaec06c26bc8d5acf324e3c32965f643f0bffc505ab": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.0012650895102857469"
+    },
+    "result": {
+      "errors": 7448,
+      "discards": 0
+    },
+    "shots": 7211831,
+    "duration": 456.9712116718292
+  },
+  "fc893d78b08f8c65087649202b781e4bb58237d5cea9858a7708ee570d727b8e7a3490d33a4238776a7a4795c67e0a634c734233c8b3917ddfbc1c33b18fc247": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.0009486832980505139"
+    },
+    "result": {
+      "errors": 6,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.6133346557617188
+  },
+  "fbcc962a5a2c3941cac32dfeaa617b9857175659dd2eef659b4b660d94eb92a5029ac4c5a072c738c6aff29f9ffe09b1f997ce7677192297084d4ad4d193890e": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.0007114121116984966"
+    },
+    "result": {
+      "errors": 2,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.3990449905395508
+  },
+  "69dcb454e8d80acf83cfd5966add46ceb6e33e4155964fecb6490ddecbbb44b8994f5020479d4615922e188c1781018b1122e79dba34056d06094da73bd3a4d0": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.0005334838230116769"
+    },
+    "result": {
+      "errors": 4,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.28960704803466797
+  },
+  "454a4c5d57f5431ca8fe067657c637a08f32ac52d76e95404343758e2447b7dde85de152619e695ec998ab0d4190512e7d539ec9634e13d7fbc18e540adcf4da": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.00040005642964899724"
+    },
+    "result": {
+      "errors": 2,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.38289618492126465
+  },
+  "987c4822f2c5cf225181d9fc3b62aa8de83bc2477cfc56024a07700f1f2f118051ff2aa02c12b7282172f08edda422e4860e6d986bfee32d93a0eb85521b8dc7": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.00030000000000000003"
+    },
+    "result": {
+      "errors": 2,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.2920260429382324
+  },
+  "9a97be7dae16986dcff1a30fb21aa550b29b5e191b3c3572d2a2d152776ba35b499e248c9acca36f5d8af2880ccab56e3404d775be34f3267c6eeee9fa01f3a7": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.00022496826279973676"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.22199106216430664
+  },
+  "2d987d5ddc0361d754ad78980495baf0d2ae2219195f2196aba6172f47acbdc48032ae295dcf7d745d2654b03a7e207987555cf34970083e62c94a312c8bd078": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.00016870239755710476"
+    },
+    "result": {
+      "errors": 1,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.284696102142334
+  },
+  "a4f4d990398a06ce5648e1a15515a22a7ae5dcfd4d77f9c412ba146b08056576036db197f8fb51c75bffc68ed2a8abcac2ac7a40ef8eebc0397865df93c9658f": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "0.0001265089510285747"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.20288991928100586
+  },
+  "e975e9066c608e29d1f550ab4a3bb15812fea5cf4f2854639f0267a07c3ef56ebbb6b60af88d945e0a0cbe07612f8d6a65a01d94e066b6390d29aba42f705577": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "9.486832980505139e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.24298691749572754
+  },
+  "7bc142052df51eb91e3df4f37268ba5a694377805c194aa9067454f600a67a8a255d8d3692cc9afb6af1f99d34c3738ee1628200be3d15a492b16a7e3cf12459": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "7.114121116984968e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.24590420722961426
+  },
+  "06c1229a21a2f2d648082bc0d80655b242437fa83064028c62439aa72ef0406e5c5a6a39d1a06c37fca910802135b6a3c6228e9464f2ae2d71e6fcc0fb9e663e": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "5.334838230116769e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.28261566162109375
+  },
+  "6cd01220de679aa38f297461e9270d5b42525be7e67dba5ef8a507f26d9f98ccacefa6d01b6804a1f754f7483d6ee166735f50f5aec425ee011f9beb121ecdcd": {
+    "args": [],
+    "kwargs": {
+      "d": "3",
+      "p": "4.000564296489973e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.25920581817626953
+  },
+  "a15841d9e2bae1a233f8d73f00215f5c88df96f0802df8985fc1d35e4d3502681791831f56dba59eaa26050e41902db0bf5c10fa94615caa6b9ee983751f0da1": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.022496826279973674"
+    },
+    "result": {
+      "errors": 10857,
+      "discards": 0
+    },
+    "shots": 29505,
+    "duration": 2016.083242893219
+  },
+  "874242404839e9d41027b5ff1771e73af329c634fbb1fa633f98c61f0dffa4c5acfd509f8abb64190d8aef2baabef0f043f1de72391a4e0659b17ac6297e075a": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.016870239755710472"
+    },
+    "result": {
+      "errors": 7402,
+      "discards": 0
+    },
+    "shots": 29703,
+    "duration": 2087.8877563476562
+  },
+  "25719cb30f5e236e37f9fa7a0c99d5caad9dd1f9936eb8df1be3c4a5796c3bdfc8857f1b33a071d8255a2ed6d80008819b736e28f12d87efdaba95f96b865061": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.012650895102857468"
+    },
+    "result": {
+      "errors": 9196,
+      "discards": 0
+    },
+    "shots": 60670,
+    "duration": 4003.199380874634
+  },
+  "d8498bdebe92cda78553a71864b2306768cf7cd1e97109b69269447b3e692b5195f6222286143245c041afbdf37192191b49a3eae082f80e0b710fa89dab3ba7": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.009486832980505138"
+    },
+    "result": {
+      "errors": 7418,
+      "discards": 0
+    },
+    "shots": 101177,
+    "duration": 4782.787659883499
+  },
+  "2309e8748a39de4f9a9b480b387beeeff3546d6da1128962bde047a1b304b534a4f62a7eecf06edce902280f371bacca59d0ac50d9cba2d4ab2d2940591104d0": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.007114121116984966"
+    },
+    "result": {
+      "errors": 7397,
+      "discards": 0
+    },
+    "shots": 220588,
+    "duration": 7051.544716119766
+  },
+  "78c6ec5459fb5f7f78b2a862d450624dbfb9df144fbbd70659e33a752969cc46bf536a0e438f165b173247c9dd6260d211464327015f3c297e0bd08423c0e3e3": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.005334838230116768"
+    },
+    "result": {
+      "errors": 7398,
+      "discards": 0
+    },
+    "shots": 524145,
+    "duration": 9505.086465120316
+  },
+  "ef70dcf59b4e26cb831c064a28a2502f69a0b006aaf233b403879dab4cc17e4457eff3170c49681afe0423b9b6e05ba46abb1101483aa92c4813bb63e70fef56": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.004000564296489972"
+    },
+    "result": {
+      "errors": 7476,
+      "discards": 0
+    },
+    "shots": 1120655,
+    "duration": 12581.965351343155
+  },
+  "1cdd9e59c24a9b604a57e180543aff7e8cacdd485fc4506c0ec2977d462e2da73036d19b6aa653764d9117cc819c2e7d0748a04e889bd708c115afb109346e9f": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.003"
+    },
+    "result": {
+      "errors": 11184,
+      "discards": 0
+    },
+    "shots": 3892665,
+    "duration": 25052.183302402496
+  },
+  "22b1c7977125bea5d7ef29e01ad1d3cb9f0f5f8d36c7d4d9d6fe78b60ad591f3730030430a25ca01f712959370f35c6ef147e90fda8aa878ba8b227489c7f4a7": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.002249682627997368"
+    },
+    "result": {
+      "errors": 9536,
+      "discards": 0
+    },
+    "shots": 9510825,
+    "duration": 32200.460862874985
+  },
+  "c5dc0dd1336a2437478df54c5fd523feedc426c4fe7ab5d91489c238c1ff45411845a3e2b0e5cbfc0f3a413539846d5f30df51da1f9480a34ea1eccd040838e8": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.0016870239755710473"
+    },
+    "result": {
+      "errors": 3,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 18.00674033164978
+  },
+  "b777551abca9eee5ca9a5dee739991ac6b46b719b809f71510e9d7b5f72a57aa8dc5c48bc07d3f0803a47f45f32bc46a24df7ddb02c18253ea8afb6ef0fa06c6": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.0012650895102857469"
+    },
+    "result": {
+      "errors": 4,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 9.974643468856812
+  },
+  "fe97ee6c0b713bbc98117e14d4f4dd7bf00e3f944ec02d1f2f13a0bc6270c81e858ae29753d7935e31e0add3d9466978ecb2f0f7107110d890476f188a4ded43": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.0009486832980505139"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 6.913003921508789
+  },
+  "3a2a88ab2e1a8a0dbb59a0505a9306c604471518bb1a9387450408234b4567822f993d597906e5dcfc97e1220ad8025a9741fc30d7b48c7681cc057cc9f05eef": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.0007114121116984966"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 3.7623777389526367
+  },
+  "2c5576d60c148e989b82ece4a3f57dfeb0597d53e3ea814b2d258caf0990851353d4c9f2432aa4f7ce6c591f68991904a9eca9b6d364b4ca3539a9998d8bd437": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.0005334838230116769"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 2.3037655353546143
+  },
+  "66fb7f8e758e524c2d3e723411d0958f84b8f146ee51840cd97f389cff5be8046fba14bcb345ddf5a9119e64616e898133ea2bd4d1e20824125dabe28cf91fb2": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.00040005642964899724"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 1.4776582717895508
+  },
+  "4c12da747333c26c69ce437b59cb084a006697fd19187295a3ffaf41f99867dc2a447165b0eeb6dc2eb10705f2b2cddd9ea758cd3ab2e6beceb6b337ed744045": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.00030000000000000003"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 1.204646110534668
+  },
+  "ee082533a456d62d803d3e05581e4272e865103d4a22b8882666e7c27287d34e2bce00ea37bf361d869affd44c89d295d806b71cea0e47219ab2c1a307ff077e": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.00022496826279973676"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 1.035485029220581
+  },
+  "691f6312f5dd3cb3305417ff24710b1e1a75f8ccc027c885a5c03f011693f8d8df09e5cea941c3af609efead5519b6a99486891233c396c697f0601bf5943640": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.00016870239755710476"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 1.4639291763305664
+  },
+  "c0cdab6a0bbfd690cb371402cc34f8160097a0358268ab8b4386122ee1f43ad9a313cb0c9d7fbb81b81095c8a89d62ddcde30ada323fb4fac623041fcabc26dd": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "0.0001265089510285747"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 1.0144567489624023
+  },
+  "8c849ae6477508870d128d78998ffccf65d09c013fc41395dc4514b3fe95ceaa71a1254a01888d261afdc9b49819f46ff6944f8982031c2f6a4e4269f2da264a": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "9.486832980505139e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.8299999237060547
+  },
+  "f091c6ee197e710a72af4b2ecb05d1275f6a2922f809ea0ccf6ee7267332b013692ace7b7bd54e6274ebdcbdb847cf9c3842b48285e7748d5639098f08fc4356": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "7.114121116984968e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.8741059303283691
+  },
+  "a9d26603e14aedc4a1482da631eb5beb0a39bdc083c0c94753d9a88b75cba95b338b2c1ab8b29365bcdd878376a4d8c47da6b64adecbb21edb24ea25aa1c23b0": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "5.334838230116769e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.7975399494171143
+  },
+  "67e6b6b79c1e25a4ba24ef72615fb8cbee8a2d056362a03fe72043212530e289b1a5f0e163320616e8f528ae681cbb167b3f02b706db9c5251243a59ccbf0ac5": {
+    "args": [],
+    "kwargs": {
+      "d": "5",
+      "p": "4.000564296489973e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 0.8626806735992432
+  },
+  "9ef3bac8e6412e7438c289204518d6d9e481bd502b5f5b10fca96a19e9538b7f3d119240e5e90778b5914f752601be951d0d87ad94be28f3427aef72b3e8e842": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.022496826279973674"
+    },
+    "result": {
+      "errors": 10781,
+      "discards": 0
+    },
+    "shots": 24520,
+    "duration": 39514.78564786911
+  },
+  "f6b1280536989d1fa3b4ce6511b80c459c05d70bb5813ce93913db46983cbb804c65f458ca0b4dd39cf38aa81aa532ad83f6470c7aa6dae525d577e6f863d780": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.016870239755710472"
+    },
+    "result": {
+      "errors": 7422,
+      "discards": 0
+    },
+    "shots": 19928,
+    "duration": 14515.34821486473
+  },
+  "1ed25724424e104026ace554cbf5d461cb984265b09b7b92f983592ec2fd8920bf72eae0cfd53df7d2352b79aa64dda5e19399a41d5a61c40c78b61948abf4c9": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.012650895102857468"
+    },
+    "result": {
+      "errors": 7430,
+      "discards": 0
+    },
+    "shots": 34160,
+    "duration": 11695.303770780563
+  },
+  "d82f11ab325b0f1b6b370332b3f9027e1c01645f00618a0f23cf018b2698c293ff765157418d743924d20cf23e6ee7cdb4214e7e4289176abb56a5f2038852eb": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.009486832980505138"
+    },
+    "result": {
+      "errors": 9602,
+      "discards": 0
+    },
+    "shots": 96216,
+    "duration": 15245.999607801437
+  },
+  "cd070e2d443eefc976a52f8a9500ea20f6551e1115c131a4c531fe372e5d06975ac43b3fd31b9e83443f054ab3417e59bb99b4fe9301084bf5a5e3ef7b4719a8": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.007114121116984966"
+    },
+    "result": {
+      "errors": 13037,
+      "discards": 0
+    },
+    "shots": 259439,
+    "duration": 27074.026614665985
+  },
+  "626d3a8db3b91400859fc71a6003dc40a3acf3f091320e11fa3dba6f34f068a8b083669854d61adc3852a0b2cc6681035b79c136932b0a1b1d5e872a48228705": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.005334838230116768"
+    },
+    "result": {
+      "errors": 7168,
+      "discards": 0
+    },
+    "shots": 634404,
+    "duration": 41590.18002939224
+  },
+  "c87a5c43db21f101e3578e8455944049e705fea2e76cb468217e1e11fff38a76a71e64f894337b2e8a1896d7365860a1e4eb12df40fd3777fc999cf3f6297f7c": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.004000564296489972"
+    },
+    "result": {
+      "errors": 8751,
+      "discards": 0
+    },
+    "shots": 1684289,
+    "duration": 81358.13080620766
+  },
+  "b9c755fd30f013b54186ba413e725632411df322881cc46884b91063c467a36a2856001b9c29bb9eaa4da6329be91f3d579fe466a6ccca7f246c11c9b7c796e9": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.003"
+    },
+    "result": {
+      "errors": 4458,
+      "discards": 0
+    },
+    "shots": 3081673,
+    "duration": 70538.99636411667
+  },
+  "d2aca6ad7fa3b0df27ed61d49c9a344e1c6a902753602510e46a5a062957d53ebdf03712eaaabbe26c104df7627e384a8438cccac3bcfc0e4aed09d481347583": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.002249682627997368"
+    },
+    "result": {
+      "errors": 3,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 154.1856882572174
+  },
+  "ecfb76d29c08ac77a0bcfb9fc091d4e9d278a01388165d53625802683137b69140b68eb1587bbde786b3af25b2cdaec53af2323ac92a4890c60fe75416af5485": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.0016870239755710473"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 73.11833024024963
+  },
+  "fc09254f5a790a99e4e67b1cab193a7ba0256a0a3818db147e5e3bfcca21239a2ed93af74740f9f795cd5d25311953c636711e4dc70908c20cbc967f470ff9c3": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.0012650895102857469"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 38.92962908744812
+  },
+  "4cadc7b36f1b250bd473671d80a34b1cac267eb59da8e541a517faab2c68201642ca2b93c82cf48d871928ed93f44063b18267fcf1cd36e8020873df450bb97e": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.0009486832980505139"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 27.31313920021057
+  },
+  "997353293c9b0192b5173cb7dad875afc3e2219b01ba2ab5e6b6989887c8ca0206c4c134095f6a2fc58802c43561c0282247301bfc4e036211d2253473d289bd": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.0007114121116984966"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 12.84416127204895
+  },
+  "db819557238c64751e2f62b81dcd01dbcf4733c8fe02c3fe2fcb815e61d35e51aa0f2f61e8481f1215e045ecf7f37a88e0990528b468c1a2e9d3be22112baa02": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.0005334838230116769"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 10.113731145858765
+  },
+  "5d0d7403f1f34c4ab161200907ac86c5562266f53719513e942abeb9dab518ddfff3ea2e8f4efec4fb4957800bc7f221c617722022cbaf1a264e75f81fbc2601": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.00040005642964899724"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 5.450017929077148
+  },
+  "ac205846703e68f24ce4ae05596e9947686f5d2f7192ec5fd0d293eca3ccffdc3d24122075da797301c072cb9e88f9a0f23e0c5c0d203b3c2e9472315e2692ad": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.00030000000000000003"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 4.119519233703613
+  },
+  "788df588b3e1d94d615b2f98d5f889e699d734d41f031f3cb59935cec1e11b47e85a5d57465b597544f86695d0447bdd20e73055b369eb70b23704d9d74a4b4b": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.00022496826279973676"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 3.471858024597168
+  },
+  "6029163254ca3c75c6e553876575ec7323056696aaadb59bdb225a7082eedb60bc5e11c89d33ac182b919886b730cdd62f9cf4b4f790294c73c1ad567008df08": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.00016870239755710476"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 3.32608962059021
+  },
+  "10efaaeac0fc961e3ef348fafad010b69ba568f24b7c0195c4f4d8ff83cb043e4aa19cd54f4bbc376ad68961a0b67850fa2baebffe52d400cc0bf420508a46ee": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "0.0001265089510285747"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 3.193674087524414
+  },
+  "33c5ba608817b5ab6be8174c9c009b4b8428f49d09b391569b1f8a47aa761eb3344acd1488f66e012e5f99677a4bc89bd3c27c195a2230649a186907aaf7f5df": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "9.486832980505139e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 2.5521187782287598
+  },
+  "ede3707ebab60c208b76c82989d9c9d8bb66d9e3cdae1906458ac0d67879e9f8208249007e74a753d40a2aa3982458a4adade7d29a95eafdb7e2e5c99f52b867": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "7.114121116984968e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 2.619267702102661
+  },
+  "d7596f17875c1519b42f6d242121c3af73d065bf24dd0f0f0a2f9d2ff835f557e0cb56af4b317cc0d801cd97081c0e6b8aae31949f3768f3aba93852f424c0bf": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "5.334838230116769e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 2.5611939430236816
+  },
+  "9a469d8b740eb7d46a12edbe8a0058199edc8b7406ce4fe9d6b057e70e38a16fa593f5af97a07fdc51a719d5f5671bb6a8d581f1d032c642bbdd7925980cde23": {
+    "args": [],
+    "kwargs": {
+      "d": "7",
+      "p": "4.000564296489973e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 2.4049341678619385
+  },
+  "5db7eae153840a06a12d70f884b56958eefbc39eea0e035f13849b6141960538d36d25bcbe9d10fc131ce7803288a117f66d2b30478b7b64e30aca1f72b7efa4": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.022496826279973674"
+    },
+    "result": null,
+    "shots": 0,
+    "duration": 0
+  },
+  "e62d861e631ec4f25236c3ebf75db1c4707cb73b6aedd1e037ddb6c8d2d6cc84d9754d6b34aa2f9e32809dc962ba3e1a9c764cb96350fb2871ca994c46c8f73e": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.016870239755710472"
+    },
+    "result": null,
+    "shots": 0,
+    "duration": 0
+  },
+  "483dfa3fb7064668732dd67dafb5afaaad3aaf47d5790d8198e856e2f9078a216ac161e08d8f28cf14c501d353a8391155c5382e29238e357b512ac5c44aafcc": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.012650895102857468"
+    },
+    "result": {
+      "errors": 6451,
+      "discards": 0
+    },
+    "shots": 21757,
+    "duration": 88017.68800973892
+  },
+  "04ef598d2d5d2c2734476e160922f9c8f7fb8ab07cf3fc2bb038f76cbb621af8785113f8b79758325318769021eeeec1c6844c5bd12e6aa36efd348ef2e2b3ea": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.009486832980505138"
+    },
+    "result": {
+      "errors": 9813,
+      "discards": 0
+    },
+    "shots": 54000,
+    "duration": 59348.00669550896
+  },
+  "2f92c13b9e5f0279213823af63adb4516d4d9377be318a8e80aa97b148ebe0ef1c6206e61a68aa0303acb3a90f292f2ebc08337f4beb20bc89d3c8b971e65466": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.007114121116984966"
+    },
+    "result": {
+      "errors": 6900,
+      "discards": 0
+    },
+    "shots": 151351,
+    "duration": 55232.235663414
+  },
+  "8f4162162c06c586c61104ba48dea1eb451a718c3b81fcb39f6bb48d1c270f7e204e2f2ece2dc4221ccc219a8f9c0d4933bf3e106694d4d88a9986d2046f6c1d": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.005334838230116768"
+    },
+    "result": {
+      "errors": 10621,
+      "discards": 0
+    },
+    "shots": 643455,
+    "duration": 117414.75679636002
+  },
+  "f7372ee9c3ea6695571bb719b323daaae3e1b6a3693778215e53982a3ab9dae4718aa81e49a3b9d1c392b89ac87832d672dc40dd8d793e4ecae44e2999292d2b": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.004000564296489972"
+    },
+    "result": {
+      "errors": 31207,
+      "discards": 0
+    },
+    "shots": 7431703,
+    "duration": 859831.769728899
+  },
+  "032fe225e3f67d3350e172e0bed647c3b3a8540f28e2531fcc2d7108dfee69a56c79b6ac6491bfa3432013b91a79356a6c73e1d1c64b39518c93dabb5f8f8ba8": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.003"
+    },
+    "result": {
+      "errors": 4067,
+      "discards": 0
+    },
+    "shots": 5690372,
+    "duration": 353406.6393895149
+  },
+  "b08e89a7c6708fdc139f41ba76b7c50445259447b286d4335f52141b7a4eafc84b998680666a962a39ce9e3563f9b0def946e5a243c76bbc7844c55c7a496151": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.002249682627997368"
+    },
+    "result": {
+      "errors": 2,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 373.6131703853607
+  },
+  "6136cabcb5ea10d7fd29e240837dc25fdb7d77de8948aa0a530c50af3fba3f3883eaf54f73680920cdb9eff648a2815521c31c5c147ff342fd4be22822da3b30": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.0016870239755710473"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 189.21547675132751
+  },
+  "0ca63bf88dcc4cec04bf75a32d9c2f247b5fb718aed311f0aaae018f9cef4c32d23dfce0af745e9de96cd90b75eb900881b8d2fbcb68d63a79a913c1e23b3144": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.0012650895102857469"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 100.78700757026672
+  },
+  "b092a7f0cb9eab21243f0951c68908d2bbcd0253fe5010b0302b91a2590409c9671ec854f7e6bf446b8dc7b2ee48991eb7e1094d983b791cd434c642558d5c06": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.0009486832980505139"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 62.1826536655426
+  },
+  "ae3bbe5d219bf85e55388a6dbcdd9b8fc39a55672fa6fca82ece6bcb8bf353b1560289a6c7e24f0c51f18ee16c5d00b5d41c6c601cc7af0e5b26c90606817187": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.0007114121116984966"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 38.45821404457092
+  },
+  "a5ce5b7c3dda9913893b89fc2d2e885e0aacf795740d23f47b508df6b927ebbff7a156379f73ec0c8e5dfc3c1bf2de081943b38e12d6e37669d1810b853d643c": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.0005334838230116769"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 20.8243248462677
+  },
+  "917fa612641ab1ab116f8599a08c994e45b032e7fa4d9fc4f2ddbd8282de09c39cd71742d49cf760879de17a7ddc3505a3fef2e68226436ed404f27c4b80d055": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.00040005642964899724"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 18.33254909515381
+  },
+  "508343c1afe25bef6789a14ad70ea5c39f1a7938df285bb80b79cb81e7a44f0fcf4e9ada8a864f22b52bad3c575e0aeeaa2367667c65a6ade2c339c68ba12130": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.00030000000000000003"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 11.08896803855896
+  },
+  "04a1c0158eeaf4ae8b122064333b13e6c834019892b771747758f642938f56ca2604170eee7c7fcf7af25f76977485e47972ef492bcb69be8868d7275fbf5543": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.00022496826279973676"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 10.791383028030396
+  },
+  "099db05b90a23711b7ac8d1ebdcde4bc4f170e708167ccd2cb0628b46e73009622424915545be1a984d5a6fb958ed578c761cba7d43c31c5e4738115b21c2b91": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.00016870239755710476"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 11.159218549728394
+  },
+  "b0fa43a24b9dac52681c1ab15cb27ff90a0a72d603f0fad639949db11bf4f4447228530bf5365ecfacd36ecd54028c157c21065b2893cdc5562864a9bdc05bea": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "0.0001265089510285747"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 7.184336185455322
+  },
+  "794ed56178fe438c151333d4211ae26e09568176d0069d0cb355e624e97f0ba29897ddaea1791e8f6b341361508ec7d12c77ee174cbc1a45bcc702ce895390c6": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "9.486832980505139e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 7.536391973495483
+  },
+  "d072d608b28bc91b53efccd0715c8c96fdaa72619e54d8f4083cc285090d7e2e7380a59bdb1fe896b17332e80ec3741601c69dd67c2774f6632db5af73faeca1": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "7.114121116984968e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 5.99708890914917
+  },
+  "858a77c8afa27296074a5bc81cf1c6ca33b3c5306cf519a460041cc431498d728d7508f2479f51a90b40ec6ffb4dbaf270014855dffc34e775574601d789fb97": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "5.334838230116769e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 6.268866062164307
+  },
+  "2b8dfea56f5dc9c9578c869c05f2a51080dcac65db5718b3421975d700c7881391b83352366e108aeb4448a1ebc478d2e3a5d9ec6dd179200a924430cf112ff9": {
+    "args": [],
+    "kwargs": {
+      "d": "9",
+      "p": "4.000564296489973e-05"
+    },
+    "result": {
+      "errors": 0,
+      "discards": 0
+    },
+    "shots": 10000,
+    "duration": 5.904959440231323
+  }
+}

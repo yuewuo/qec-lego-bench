@@ -9,8 +9,16 @@ class Stats:
         self.stats = stats
 
     @property
+    def errors(self) -> int:
+        return self.stats.errors
+
+    @property
     def failed(self) -> int:
         return self.stats.errors
+
+    @property
+    def shots(self) -> int:
+        return self.stats.shots
 
     @property
     def samples(self) -> int:
@@ -47,6 +55,10 @@ class Stats:
         return 2.58 * np.sqrt(
             failure_rate_value * (1.0 - failure_rate_value) / self.samples
         )
+
+    @property
+    def relative_uncertainty(self) -> float:
+        return self.failure_rate_uncertainty / self.failure_rate_value
 
     @property
     def failure_rate(self):

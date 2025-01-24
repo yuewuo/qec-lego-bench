@@ -14,7 +14,13 @@ from typing import (
 )
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
-from distributed import Future, Client, wait, TimeoutError as DaskTimeoutError
+from distributed import (
+    Future,
+    Client,
+    wait,
+    TimeoutError as DaskTimeoutError,
+    as_completed,
+)
 from concurrent.futures._base import DoneAndNotDoneFutures, FIRST_COMPLETED
 from concurrent.futures import Future as ConcurrentFuture
 import functools
@@ -26,6 +32,12 @@ from qec_lego_bench.stats import Stats
 import json
 import portalocker
 import os
+from stablehash import stablehash
+
+
+def hex_hash(value: Any) -> str:
+    sign_mask = (1 << sys.hash_info.width) - 1
+    return f"{hash(value) & sign_mask:#0{sys.hash_info.width//4}X}"[2:]
 
 
 class MonteCarloResult(Protocol):
@@ -63,13 +75,13 @@ class LogicalErrorResult(MonteCarloResult):
 """
 A function to run the Monte Carlo result, given the number of shots and other parameters provided by the user
 """
-MonteCarloFunc = Callable[Concatenate[int, ...], MonteCarloResult]
+MonteCarloFunc = Callable[Concatenate[int, ...], Tuple[int, MonteCarloResult]]
 
 """
 A function to decide which is the next job to run and how many shots to run
 """
-MonteCarloNextJobs = Callable[
-    ["MonteCarloJobExecutor"], Iterable[Tuple["MonteCarloJob", int]]
+MonteCarloJobSubmitter = Callable[
+    [Iterable["MonteCarloJob"]], Iterable[Tuple["MonteCarloJob", int]]
 ]
 
 
@@ -79,29 +91,26 @@ class JobParameters:
     kwargs: dict
 
     def __post_init__(self):
-        assert hash(self) != 0, "test hash value to make sure it is hashable"
+        assert self.hash != "", "test hash value to make sure it is hashable"
 
     @functools.cached_property
-    def hash(self) -> int:
+    def hash(self) -> str:
         _kwargs_ordered = tuple((k, self.kwargs[k]) for k in sorted(self.kwargs.keys()))
         for arg in self.args:
             try:
-                hash(arg)
+                stablehash(arg)
             except Exception as e:
                 print(f"Error hashing positional argument {arg}: {e}")
                 raise e
         for key, value in _kwargs_ordered:
             assert key != "shots", "`shots` is a reserved keyword argument"
             try:
-                hash(key)
-                hash(value)
+                stablehash(key)
+                stablehash(value)
             except Exception as e:
                 print(f"Error hashing keyword argument {key}={value}: {e}")
                 raise e
-        return hash((self.args, _kwargs_ordered))
-
-    def __hash__(self):
-        return self.hash
+        return stablehash((self.args, _kwargs_ordered)).hexdigest()
 
 
 class MonteCarloJob:
@@ -138,16 +147,21 @@ class MonteCarloJob:
     def shots(self) -> int:
         return self.finished_shots
 
-    def __hash__(self):
-        return hash(self._params)
+    @property
+    def duration_per_shot(self) -> float:
+        return self.duration / self.finished_shots
+
+    @property
+    def hash(self) -> str:
+        return self._params.hash
 
 
 @dataclass
 class MonteCarloExecutorConfig:
-    # at least run 10 shots before sufficient estimation time is reached
-    min_shots_before_estimation: int = 10
-    # run at least 10s for single thread before it can spawn multiple
-    min_multi_thread_duration: float = 10
+    # at least run 100 shots before sufficient estimation time is reached
+    min_shots_before_estimation: int = 100
+    # run at least 30s for single thread before it can spawn multiple
+    min_multi_thread_duration: float = 30
     # let each job run for about 3 minutes to reduce scheduling overhead
     target_job_time: float = 180
 
@@ -172,21 +186,20 @@ class MonteCarloExecutorConfig:
 class MonitoredResult:
     result: MonteCarloResult
     shots: int = 0
+    actual_shots: int = 0
     duration: float = 0
 
 
 def monitored_job(
     func: MonteCarloFunc, shots: int, args: tuple, kwargs: dict
 ) -> MonitoredResult:
-    start = time.time()
-    result = func(shots, *args, **kwargs)
-    duration = time.time() - start
-    return MonitoredResult(result, shots, duration)
+    start = time.thread_time()
+    actual_shots, result = func(shots, *args, **kwargs)
+    duration = time.thread_time() - start
+    return MonitoredResult(result, shots, actual_shots, duration)
 
 
 class MonteCarloJobExecutor:
-    jobs: dict[int, MonteCarloJob]
-
     def __init__(
         self,
         client: Client,
@@ -201,10 +214,12 @@ class MonteCarloJobExecutor:
         assert callable(func)
         self.client = client
         self.func = func
-        self.jobs: dict[int, MonteCarloJob] = {hash(job): job for job in jobs}
+        self.jobs: dict[str, MonteCarloJob] = {job.hash: job for job in jobs}
         self.pending_futures: list[Future] = []
         self.future_info: dict[Future, MonteCarloJob] = {}
         self.config = config or MonteCarloExecutorConfig()
+        # the remaining shots due to insufficient number of samples for estimation runtime
+        self.pending_submit: dict[MonteCarloJob, tuple[int, Future]] = {}
         self.filename = filename
         self.result_type = result_type
         if filename is not None:
@@ -215,26 +230,24 @@ class MonteCarloJobExecutor:
             yield job
 
     def add_job(self, job: MonteCarloJob) -> None:
-        assert hash(job) not in self.jobs, "Job already exists"
-        self.jobs[hash(job)] = job
+        assert job.hash not in self.jobs, "Job already exists"
+        self.jobs[job.hash] = job
 
     def get_job(self, *args, **kwargs) -> Optional[MonteCarloJob]:
-        hash_value = hash(JobParameters(args, kwargs))
+        hash_value = JobParameters(args, kwargs).hash
         if hash_value not in self.jobs:
             return None
         return self.jobs[hash_value]
 
     def execute(
         self,
-        next_jobs: MonteCarloNextJobs,
+        submitter: MonteCarloJobSubmitter,
         timeout: float = sys.float_info.max,
         loop_callback: Optional[Callable[["MonteCarloJobExecutor"], None]] = None,
     ) -> None:
         if loop_callback is not None:
             loop_callback(self)
         start = time.time()
-        # the remaining shots due to insufficient number of samples for estimation runtime
-        pending_submit: dict[MonteCarloJob, tuple[int, Future]] = {}
         try:
             while True:
                 remaining_time = timeout - (time.time() - start)
@@ -248,36 +261,36 @@ class MonteCarloJobExecutor:
                     )
                 except DaskTimeoutError as e:
                     raise TimeoutError()
-                for done in futures.done:
+                for done, job_result in as_completed(futures.done, with_results=True):
                     assert isinstance(done, Future)
                     job = self.future_info[done]
-                    job_result: MonitoredResult = done.result()
                     if job.result is None:
                         job.result = job_result.result
                     else:
                         job.result += job_result.result
                     job.duration += job_result.duration
-                    job.finished_shots += job_result.shots
+                    job.finished_shots += job_result.actual_shots
                     job.pending_shots -= job_result.shots
                     del self.future_info[done]
                 self.pending_futures = list(futures.not_done)  # type: ignore
                 # get the next job to run
-                for job, shots in next_jobs(self):
+                for job, shots in submitter(self):
+                    shots = max(int(shots), 0)
                     # submit jobs such that it runs for this number of shots
                     job.pending_shots += shots
-                    if job in pending_submit:
-                        remaining, blocking_future = pending_submit[job]
-                        pending_submit[job] = remaining + shots, blocking_future
+                    if job in self.pending_submit:
+                        remaining, blocking_future = self.pending_submit[job]
+                        self.pending_submit[job] = remaining + shots, blocking_future
                     else:
                         # add the job to the pending submit and mock a done job such that it will be submitted later
                         mock_future: ConcurrentFuture = ConcurrentFuture()
                         mock_future.set_result(0)
-                        pending_submit[job] = shots, cast(Future, mock_future)
-                for job in list(pending_submit.keys()):
-                    shots, done_future = pending_submit[job]
+                        self.pending_submit[job] = shots, cast(Future, mock_future)
+                for job in list(self.pending_submit.keys()):
+                    shots, done_future = self.pending_submit[job]
                     if not done_future.done():
                         continue  # keep waiting
-                    del pending_submit[job]
+                    del self.pending_submit[job]
                     shots_per_thread, threads = self.config.warmed_up_split(job, shots)
                     for _ in range(threads):
                         future = self.client.submit(
@@ -291,7 +304,7 @@ class MonteCarloJobExecutor:
                         self.future_info[future] = job
                     actual_shots = shots_per_thread * threads
                     if actual_shots < shots:
-                        pending_submit[job] = shots - actual_shots, future
+                        self.pending_submit[job] = shots - actual_shots, future
                     else:
                         # adjust actual pending shots
                         job.pending_shots += actual_shots - shots
@@ -309,6 +322,7 @@ class MonteCarloJobExecutor:
                 future.cancel()
             self.pending_futures = []
             self.future_info.clear()
+            self.pending_submit.clear()
             for job in self:
                 job.pending_shots = 0
 
@@ -318,10 +332,9 @@ class MonteCarloJobExecutor:
         with portalocker.Lock(filename, "r") as f:
             persist = json.load(f)
             for job in self.jobs.values():
-                job_key = str(hash(job))
-                if job_key not in persist:
+                if job.hash not in persist:
                     continue
-                entry = persist[job_key]
+                entry = persist[job.hash]
                 # sanity check
                 for entry_arg, arg in zip(entry["args"], job.args):
                     assert entry_arg == str(arg), "Hash conflict"
@@ -338,7 +351,9 @@ class MonteCarloJobExecutor:
                 job.duration = entry["duration"]
 
     def update_file(self, filename: str) -> None:
-        with portalocker.Lock(filename, "w+") as f:
+        with portalocker.Lock(
+            filename, "r+" if os.path.exists(filename) else "w+"
+        ) as f:
             content = f.read()
             if content == "":
                 persist = {}
@@ -346,17 +361,16 @@ class MonteCarloJobExecutor:
                 persist = json.loads(content)
             f.seek(0)
             for job in self.jobs.values():
-                job_key = str(hash(job))
-                if job_key not in persist:
-                    persist[job_key] = {
+                if job.hash not in persist:
+                    persist[job.hash] = {
                         "args": [str(arg) for arg in job.args],
                         "kwargs": {
                             key: str(value) for key, value in job.kwargs.items()
                         },
                     }
-                    entry = persist[job_key]
+                    entry = persist[job.hash]
                 else:
-                    entry = persist[job_key]
+                    entry = persist[job.hash]
                     # sanity check
                     for entry_arg, arg in zip(entry["args"], job.args):
                         assert entry_arg == str(arg), "Hash conflict"

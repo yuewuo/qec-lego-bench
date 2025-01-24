@@ -1,6 +1,7 @@
 import arguably
 import sinter
 from typing import Optional, TYPE_CHECKING
+from sinter._decoding import sample_decode
 
 from .util import *
 from .codes import *
@@ -44,25 +45,46 @@ def logical_error_rate(
         progress_callback = SinterProgressBar(
             name=str(decoder), max_shots=max_shots, max_errors=max_errors
         )
-    results = sinter.collect(
-        num_workers=num_workers,
-        tasks=[task],
-        progress_callback=progress_callback,
-        # print_progress=not no_progress,
-        custom_decoders={str(decoder): decoder_instance},
-        save_resume_filepath=save_resume_filepath,
-    )
+    if (
+        no_progress
+        and num_workers == 1
+        and max_shots == max_errors
+        and progress_callback is None
+        and save_resume_filepath is None
+    ):
+        # run single thread instead of sinter.collect
+        single_result = sample_decode(
+            circuit_obj=task.circuit,
+            circuit_path=None,
+            dem_obj=task.detector_error_model,
+            dem_path=None,
+            num_shots=max_shots,
+            decoder=str(decoder),
+            custom_decoders={str(decoder): decoder_instance},
+        )
+        stats = Stats(single_result)
+        if not no_print:
+            print(stats)
+        return stats
+    else:
+        results = sinter.collect(
+            num_workers=num_workers,
+            tasks=[task],
+            progress_callback=progress_callback,
+            # print_progress=not no_progress,
+            custom_decoders={str(decoder): decoder_instance},
+            save_resume_filepath=save_resume_filepath,
+        )
 
-    # in case of save_resume_filepath is provided, the results
-    # contains a lot of entries. We only need the one that matches strong_id
-    for result in results:
-        if result.strong_id == strong_id:
-            stats = Stats(result)
-            if not no_print:
-                print(stats)
-            return stats
-
-    raise ValueError("No result found for the given strong_id")
+        # in case of save_resume_filepath is provided, the results
+        # contains a lot of entries. We only need the one that matches strong_id
+        for result in results:
+            if result.strong_id == strong_id:
+                stats = Stats(result)
+                if not no_print:
+                    print(stats)
+                return stats
+        raise ValueError("No result found for the given strong_id")
 
 
 class SinterProgressBar:
