@@ -2,7 +2,7 @@ evaluation
 ==============
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 1
    :glob:
 
    **/
