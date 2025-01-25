@@ -37,6 +37,7 @@ Contents
    Module Reference <api/modules>
    Introduction <notebooks/Introduction.ipynb>
    Preliminary Decoder Comparison <notebooks/preliminary-decoder-compare.ipynb>
+   Monte Carlo Sampler Example <notebooks/monte-carlo-sampling-on-cluster.ipynb>
    Evaluation <notebooks/evaluation/index.rst>
 
 
