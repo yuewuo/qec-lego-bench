@@ -37,6 +37,7 @@ Contents
    Module Reference <api/modules>
    Introduction <notebooks/Introduction.ipynb>
    Preliminary Decoder Comparison <notebooks/preliminary-decoder-compare.ipynb>
+   Evaluation <notebooks/evaluation/index.rst>
 
 
 Indices and tables
