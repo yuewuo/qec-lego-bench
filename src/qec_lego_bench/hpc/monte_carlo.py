@@ -11,6 +11,7 @@ from typing import (
     cast,
     Sequence,
     Iterable,
+    ParamSpec,
 )
 from dataclasses import dataclass
 from dataclasses_json import dataclass_json
@@ -75,7 +76,8 @@ class LogicalErrorResult(MonteCarloResult):
 """
 A function to run the Monte Carlo result, given the number of shots and other parameters provided by the user
 """
-MonteCarloFunc = Callable[Concatenate[int, ...], Tuple[int, MonteCarloResult]]
+P = ParamSpec("P")
+MonteCarloFunc = Callable[Concatenate[int, P], Tuple[int, MonteCarloResult]]
 
 """
 A function to decide which is the next job to run and how many shots to run
@@ -121,6 +123,7 @@ class MonteCarloJob:
         self.pending_shots: int = 0
         self.duration: float = 0  # overall time of the finished shots
         self.result: Optional[MonteCarloResult] = None
+        self.min_time: Optional[float] = None  # an estimation of the init time
 
     def __repr__(self):
         args = [str(arg) for arg in self.args]
@@ -164,20 +167,30 @@ class MonteCarloExecutorConfig:
     min_multi_thread_duration: float = 30
     # let each job run for about 3 minutes to reduce scheduling overhead
     target_job_time: float = 180
+    # the max time for each job to run including the initialization time
+    max_job_time: float = 3600
 
     # return the split of the shots and how many threads
     def warmed_up_split(self, job: MonteCarloJob, shots: int) -> Tuple[int, int]:
+        if job.min_time is None:
+            return 1, 1  # submit one shot as an estimation of the initialization time
         if job.finished_shots < self.min_shots_before_estimation:
             return self.min_shots_before_estimation, 1
-        per_shot_time = job.duration / job.finished_shots
-        if job.duration < self.min_multi_thread_duration:
+        per_shot_time = (job.duration - job.min_time) / job.finished_shots
+        if job.duration - job.min_time < self.min_multi_thread_duration:
             target_shots = int(self.min_multi_thread_duration / per_shot_time)
             target_shots = min(shots, target_shots)
             return target_shots, 1
         # we have gathered sufficient data to estimate the runtime
-        if shots * per_shot_time < self.target_job_time:
+        if job.min_time > self.max_job_time / 3:
+            print(
+                f"[warning] job init time {job.min_time:.1f}s exceeds 1/3 of the maximum job time of {self.max_job_time:.1f}s"
+            )
+        target_job_time = min(self.target_job_time, self.max_job_time)
+        target_job_time = max(target_job_time, job.min_time * 3)
+        if shots * per_shot_time < target_job_time:
             return shots, 1
-        threads = math.ceil(shots * per_shot_time / self.target_job_time)
+        threads = math.ceil(shots * per_shot_time / (target_job_time - job.min_time))
         shots_per_thread = math.ceil(shots / threads)
         return shots_per_thread, threads
 
@@ -271,6 +284,10 @@ class MonteCarloJobExecutor:
                     job.duration += job_result.duration
                     job.finished_shots += job_result.actual_shots
                     job.pending_shots -= job_result.shots
+                    if job.min_time is None:
+                        job.min_time = job_result.duration
+                    else:
+                        job.min_time = min(job.min_time, job_result.duration)
                     del self.future_info[done]
                 self.pending_futures = list(futures.not_done)  # type: ignore
                 # get the next job to run
