@@ -24,7 +24,6 @@ from distributed import (
 )
 from concurrent.futures._base import DoneAndNotDoneFutures, FIRST_COMPLETED
 from concurrent.futures import Future as ConcurrentFuture
-import functools
 import time
 import sys
 import math
@@ -33,7 +32,7 @@ from qec_lego_bench.stats import Stats
 import json
 import portalocker
 import os
-from stablehash import stablehash
+from .job_store import JobParameters
 
 
 def hex_hash(value: Any) -> str:
@@ -85,34 +84,6 @@ A function to decide which is the next job to run and how many shots to run
 MonteCarloJobSubmitter = Callable[
     [Iterable["MonteCarloJob"]], Iterable[Tuple["MonteCarloJob", int]]
 ]
-
-
-@dataclass(frozen=True)
-class JobParameters:
-    args: tuple
-    kwargs: dict
-
-    def __post_init__(self):
-        assert self.hash != "", "test hash value to make sure it is hashable"
-
-    @functools.cached_property
-    def hash(self) -> str:
-        _kwargs_ordered = tuple((k, self.kwargs[k]) for k in sorted(self.kwargs.keys()))
-        for arg in self.args:
-            try:
-                stablehash(arg)
-            except Exception as e:
-                print(f"Error hashing positional argument {arg}: {e}")
-                raise e
-        for key, value in _kwargs_ordered:
-            assert key != "shots", "`shots` is a reserved keyword argument"
-            try:
-                stablehash(key)
-                stablehash(value)
-            except Exception as e:
-                print(f"Error hashing keyword argument {key}={value}: {e}")
-                raise e
-        return stablehash((self.args, _kwargs_ordered)).hexdigest()
 
 
 class MonteCarloJob:
@@ -262,7 +233,7 @@ class MonteCarloJobExecutor:
             loop_callback(self)
         start = time.time()
         try:
-            while True:
+            while len(self.pending_futures) > 0:
                 remaining_time = timeout - (time.time() - start)
                 if remaining_time <= 0:
                     raise TimeoutError()
@@ -331,8 +302,6 @@ class MonteCarloJobExecutor:
                 # call user callback such that they can do some plotting of the intermediate results
                 if loop_callback is not None:
                     loop_callback(self)
-                if len(self.pending_futures) == 0:
-                    break
         finally:
             # cancel all pending futures
             for future in self.pending_futures:

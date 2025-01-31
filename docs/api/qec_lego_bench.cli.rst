@@ -20,6 +20,14 @@ qec\_lego\_bench.cli.decoders module
    :undoc-members:
    :show-inheritance:
 
+qec\_lego\_bench.cli.decoding\_speed module
+-------------------------------------------
+
+.. automodule:: qec_lego_bench.cli.decoding_speed
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 qec\_lego\_bench.cli.logical\_error\_rate module
 ------------------------------------------------
 
@@ -32,6 +40,14 @@ qec\_lego\_bench.cli.noises module
 ----------------------------------
 
 .. automodule:: qec_lego_bench.cli.noises
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+qec\_lego\_bench.cli.predict\_on\_disk module
+---------------------------------------------
+
+.. automodule:: qec_lego_bench.cli.predict_on_disk
    :members:
    :undoc-members:
    :show-inheritance:

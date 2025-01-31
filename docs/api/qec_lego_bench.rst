@@ -11,6 +11,7 @@ Subpackages
    qec_lego_bench.codes
    qec_lego_bench.decoders
    qec_lego_bench.hpc
+   qec_lego_bench.misc
    qec_lego_bench.noises
 
 Submodules

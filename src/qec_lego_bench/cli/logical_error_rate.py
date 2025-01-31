@@ -1,6 +1,6 @@
 import arguably
 import sinter
-from typing import Optional, TYPE_CHECKING
+from typing import Optional
 from sinter._decoding import sample_decode
 
 from .util import *

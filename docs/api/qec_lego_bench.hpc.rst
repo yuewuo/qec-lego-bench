@@ -13,6 +13,14 @@ Subpackages
 Submodules
 ----------
 
+qec\_lego\_bench.hpc.job\_store module
+--------------------------------------
+
+.. automodule:: qec_lego_bench.hpc.job_store
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 qec\_lego\_bench.hpc.monte\_carlo module
 ----------------------------------------
 

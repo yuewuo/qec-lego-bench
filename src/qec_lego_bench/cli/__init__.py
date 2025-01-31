@@ -1,7 +1,9 @@
 import arguably
 from .util import *
 from . import logical_error_rate
-from qec_lego_bench import noises, decoders, codes
+from . import predict_on_disk
+from . import decoding_speed
+from qec_lego_bench import noises, decoders, codes, misc
 
 
 def run():
