@@ -4,6 +4,14 @@ qec\_lego\_bench.codes.stabilizer\_codes.css\_codes package
 Submodules
 ----------
 
+qec\_lego\_bench.codes.stabilizer\_codes.css\_codes.HGP\_code module
+--------------------------------------------------------------------
+
+.. automodule:: qec_lego_bench.codes.stabilizer_codes.css_codes.HGP_code
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 qec\_lego\_bench.codes.stabilizer\_codes.css\_codes.bb\_code module
 -------------------------------------------------------------------
 

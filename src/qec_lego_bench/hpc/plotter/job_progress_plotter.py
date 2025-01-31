@@ -24,11 +24,16 @@ class JobProgressPlotter:
             "Finished",
             "Pending",
             "Submitted",
+            f"{len(executor.pending_futures)} jobs",
             "Total",
             "Duration",
         ]
         if show_logical_error:
             column_headers.extend(["Errors", "Discards", "Error Rate"])
+        job_pending_futures_count = {job: 0 for job in executor}
+        for future in executor.pending_futures:
+            job = executor.future_info[future]
+            job_pending_futures_count[job] += 1
         for job in executor:
             if job.expecting_shots == 0:
                 continue
@@ -36,12 +41,18 @@ class JobProgressPlotter:
             pending_submit = executor.pending_submit.get(job)
             if pending_submit is not None:
                 submitted -= pending_submit[0]
+            job_future_percentage = 0
+            if len(executor.pending_futures) > 0:
+                job_future_percentage = job_pending_futures_count[job] / len(
+                    executor.pending_futures
+                )
             row = [
                 job,
                 repr(job),
                 f"{job.finished_shots} ({int(job.finished_shots/job.expecting_shots*100)}%)",
                 f"{job.pending_shots} ({int(job.pending_shots/job.expecting_shots*100)}%)",
                 f"{submitted} ({int(submitted/job.expecting_shots*100)}%)",
+                f"{job_pending_futures_count[job]} ({int(job_future_percentage*100)}%)",
                 job.expecting_shots,
                 f"{job.duration:.1f}s ({job.duration/60:.1f}min)",
             ]

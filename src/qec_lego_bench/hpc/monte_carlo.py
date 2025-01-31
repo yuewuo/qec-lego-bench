@@ -233,7 +233,7 @@ class MonteCarloJobExecutor:
             loop_callback(self)
         start = time.time()
         try:
-            while len(self.pending_futures) > 0:
+            while True:
                 remaining_time = timeout - (time.time() - start)
                 if remaining_time <= 0:
                     raise TimeoutError()
@@ -245,9 +245,13 @@ class MonteCarloJobExecutor:
                     )
                 except DaskTimeoutError as e:
                     raise TimeoutError()
+                assert len(futures.done) + len(futures.not_done) == len(
+                    self.pending_futures
+                ), "API error"
                 for done, job_result in as_completed(futures.done, with_results=True):
                     assert isinstance(done, Future)
                     job = self.future_info[done]
+                    print(job_result)
                     if job.result is None:
                         job.result = job_result.result
                     else:
@@ -302,6 +306,8 @@ class MonteCarloJobExecutor:
                 # call user callback such that they can do some plotting of the intermediate results
                 if loop_callback is not None:
                     loop_callback(self)
+                if len(self.pending_futures) == 0:
+                    break
         finally:
             # cancel all pending futures
             for future in self.pending_futures:
