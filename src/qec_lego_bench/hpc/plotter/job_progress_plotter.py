@@ -11,12 +11,17 @@ class JobProgressPlotter:
     hdisplay: display.DisplayHandle = field(
         default_factory=lambda: display.display("", display_id=True)
     )
+    fig: Figure = field(default_factory=lambda: plt.figure())
+
+    def __post_init__(self):
+        self.fig.clear()
 
     def __call__(
         self, executor: MonteCarloJobExecutor, show_logical_error: bool = True
     ):
-        fig: Figure = plt.figure()
-        fig.clear()
+        fig = self.fig
+        ax = fig.gca()
+        ax.clear()
         pending_jobs = []
         finished_jobs = []
         column_headers = [
@@ -81,14 +86,13 @@ class JobProgressPlotter:
             row_headers.append(job.hash[:6])
             cell_text.append([str(e) for e in row[1:]])
         if len(cell_text) == 0:
-            plt.close(fig)
             return
         rcolors = []
         orange = plt.cm.Oranges(0.1)  # type: ignore
         for row in pending_jobs:
             rcolors.append(orange)
         rcolors.extend(["#FFFFFF"] * len(finished_jobs))
-        the_table = plt.table(
+        the_table = ax.table(
             cellText=cell_text,
             rowLabels=row_headers,
             rowColours=rcolors,
@@ -98,9 +102,7 @@ class JobProgressPlotter:
             loc="center",
         )
         the_table.auto_set_column_width(list(range(len(row_headers))))
-        ax = plt.gca()
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
-        plt.box(on=None)
+        ax.set_frame_on(False)
         self.hdisplay.update(fig)
-        plt.close(fig)

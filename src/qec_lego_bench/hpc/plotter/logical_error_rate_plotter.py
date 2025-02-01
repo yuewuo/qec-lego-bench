@@ -1,5 +1,6 @@
 from ..monte_carlo import *
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from IPython import display
 from dataclasses import field
 from typing import Optional
@@ -15,9 +16,14 @@ class LogicalErrorRatePlotter:
     hdisplay: display.DisplayHandle = field(
         default_factory=lambda: display.display("", display_id=True)
     )
+    fig: Figure = field(default_factory=lambda: plt.figure())
+
+    def __post_init__(self):
+        self.fig.clear()
 
     def __call__(self, executor: MonteCarloJobExecutor):
-        fig, ax = plt.subplots(1, 1)
+        fig = self.fig
+        ax = fig.gca()
         ax.clear()
         ax.set_xlabel("physical error rate $p$")
         ax.set_ylabel("logical error rate $p_L$")
@@ -46,4 +52,3 @@ class LogicalErrorRatePlotter:
             ax.errorbar(x_vec, y_vec, err_vec, label=f"d={d}")
         fig.legend()
         self.hdisplay.update(fig)
-        plt.close(fig)

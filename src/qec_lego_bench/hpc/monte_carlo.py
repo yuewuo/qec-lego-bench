@@ -246,12 +246,10 @@ class MonteCarloJobExecutor:
                     )
                 except DaskTimeoutError as e:
                     raise TimeoutError()
-                print(len(futures.done))
                 assert len(futures.done) + len(futures.not_done) == len(
                     self.pending_futures
                 ), "API error"
                 for done, job_result in as_completed(futures.done, with_results=True):
-                    print(job_result)
                     assert isinstance(done, Future)
                     job = self.future_info[done]
                     if job.result is None:
