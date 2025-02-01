@@ -22,6 +22,7 @@ def logical_error_rate(
     no_progress: bool = False,
     no_print: bool = False,
     save_resume_filepath: Optional[str] = None,
+    label: Optional[str] = None,
 ) -> Stats:
     code_instance = CodeCli(code)()
     noise_instance = NoiseCli(noise)()

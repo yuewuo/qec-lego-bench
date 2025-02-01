@@ -175,7 +175,7 @@ class MonitoredResult:
 
 
 def monitored_job(
-    func: MonteCarloFunc, shots: int, args: tuple, kwargs: dict
+    func: MonteCarloFunc, shots: int, job_id: int, args: tuple, kwargs: dict
 ) -> MonitoredResult:
     start = time.thread_time()
     actual_shots, result = func(shots, *args, **kwargs)
@@ -206,6 +206,7 @@ class MonteCarloJobExecutor:
         self.pending_submit: dict[MonteCarloJob, tuple[int, Future]] = {}
         self.filename = filename
         self.result_type = result_type
+        self.num_jobs = 0  # used to uniquely set job ID to avoid caching
         if filename is not None:
             self.load_from_file(filename)  # load from file on initialization
 
@@ -245,13 +246,14 @@ class MonteCarloJobExecutor:
                     )
                 except DaskTimeoutError as e:
                     raise TimeoutError()
+                print(len(futures.done))
                 assert len(futures.done) + len(futures.not_done) == len(
                     self.pending_futures
                 ), "API error"
                 for done, job_result in as_completed(futures.done, with_results=True):
+                    print(job_result)
                     assert isinstance(done, Future)
                     job = self.future_info[done]
-                    print(job_result)
                     if job.result is None:
                         job.result = job_result.result
                     else:
@@ -289,9 +291,11 @@ class MonteCarloJobExecutor:
                             monitored_job,
                             self.func,
                             shots_per_thread,
+                            self.num_jobs,
                             job.args,
                             job.kwargs,
                         )
+                        self.num_jobs += 1
                         self.pending_futures.append(future)
                         self.future_info[future] = job
                     actual_shots = shots_per_thread * threads

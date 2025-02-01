@@ -4,7 +4,7 @@ from qec_lego_bench.cli.noises import noise_cli
 import stim
 
 
-@noise_cli("NoNoise")
+@noise_cli("NoNoise", "none")
 @dataclass
 class NoNoise(Noise):
     """
