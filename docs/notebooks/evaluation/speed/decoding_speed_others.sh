@@ -9,3 +9,5 @@ papermill decoding_speed_mwpm.ipynb decoding_speed_bpuf_it5.ipynb --autosave-cel
 papermill decoding_speed_mwpm.ipynb decoding_speed_bposd.ipynb --autosave-cell-every 3 -p decoder "bposd" -p json_filename "speed-rsc-bposd.json" || sleep 3
 papermill decoding_speed_mwpm.ipynb decoding_speed_bplsd.ipynb --autosave-cell-every 3 -p decoder "bplsd" -p json_filename "speed-rsc-bplsd.json" || sleep 3
 papermill decoding_speed_mwpm.ipynb decoding_speed_bpuf.ipynb --autosave-cell-every 3 -p decoder "bpuf" -p json_filename "speed-rsc-bpuf.json" || sleep 3
+
+papermill decoding_speed_mwpm.ipynb decoding_speed_mwpf_c1000.ipynb --autosave-cell-every 3 -p decoder "mwpf(c=1000)" -p json_filename "speed-rsc-mwpf-c1000.json" || sleep 3

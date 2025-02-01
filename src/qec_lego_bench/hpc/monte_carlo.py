@@ -140,6 +140,9 @@ class MonteCarloExecutorConfig:
     target_job_time: float = 180
     # the max time for each job to run including the initialization time
     max_job_time: float = 3600
+    # a loose upper bound of how many submitted jobs there could be, because of memory leak
+    # in dask library: https://github.com/dask/distributed/pull/6342;
+    max_submitted_job: int = 1000
 
     # return the split of the shots and how many threads
     def warmed_up_split(self, job: MonteCarloJob, shots: int) -> Tuple[int, int]:
@@ -186,7 +189,6 @@ def monitored_job(
 class MonteCarloJobExecutor:
     def __init__(
         self,
-        client: Client,
         func: MonteCarloFunc,
         jobs: Sequence[MonteCarloJob],
         config: Optional[MonteCarloExecutorConfig] = None,
@@ -194,14 +196,13 @@ class MonteCarloJobExecutor:
         # used when reading from file
         result_type: Type[MonteCarloResult] = LogicalErrorResult,
     ) -> None:
-        assert isinstance(client, Client)
         assert callable(func)
-        self.client = client
+        config = config or MonteCarloExecutorConfig()
+        self.config = config
         self.func = func
         self.jobs: dict[str, MonteCarloJob] = {job.hash: job for job in jobs}
         self.pending_futures: list[Future] = []
         self.future_info: dict[Future, MonteCarloJob] = {}
-        self.config = config or MonteCarloExecutorConfig()
         # the remaining shots due to insufficient number of samples for estimation runtime
         self.pending_submit: dict[MonteCarloJob, tuple[int, Future]] = {}
         self.filename = filename
@@ -226,10 +227,12 @@ class MonteCarloJobExecutor:
 
     def execute(
         self,
+        client: Client,
         submitter: MonteCarloJobSubmitter,
         timeout: float = sys.float_info.max,
         loop_callback: Optional[Callable[["MonteCarloJobExecutor"], None]] = None,
     ) -> None:
+        assert isinstance(client, Client)
         if loop_callback is not None:
             loop_callback(self)
         start = time.time()
@@ -264,6 +267,7 @@ class MonteCarloJobExecutor:
                     else:
                         job.min_time = min(job.min_time, job_result.duration)
                     del self.future_info[done]
+                    client.cancel(done)
                 self.pending_futures = list(futures.not_done)  # type: ignore
                 # get the next job to run
                 for job, shots in submitter(self):
@@ -278,14 +282,19 @@ class MonteCarloJobExecutor:
                         mock_future: ConcurrentFuture = ConcurrentFuture()
                         mock_future.set_result(0)
                         self.pending_submit[job] = shots, cast(Future, mock_future)
-                for job in list(self.pending_submit.keys()):
-                    shots, done_future = self.pending_submit[job]
-                    if not done_future.done():
-                        continue  # keep waiting
-                    del self.pending_submit[job]
-                    shots_per_thread, threads = self.config.warmed_up_split(job, shots)
-                    for _ in range(threads):
-                        future = self.client.submit(
+                # fair submission
+                while len(self.future_info) < self.config.max_submitted_job:
+                    has_any_submission = False
+                    for job in list(self.pending_submit.keys()):
+                        shots, done_future = self.pending_submit[job]
+                        if not done_future.done():
+                            continue  # keep waiting
+                        del self.pending_submit[job]
+                        shots_per_thread, threads = self.config.warmed_up_split(
+                            job, shots
+                        )
+                        has_any_submission = True
+                        future = client.submit(
                             monitored_job,
                             self.func,
                             shots_per_thread,
@@ -296,19 +305,23 @@ class MonteCarloJobExecutor:
                         self.num_jobs += 1
                         self.pending_futures.append(future)
                         self.future_info[future] = job
-                    actual_shots = shots_per_thread * threads
-                    if actual_shots < shots:
-                        self.pending_submit[job] = shots - actual_shots, future
-                    else:
-                        # adjust actual pending shots
-                        job.pending_shots += actual_shots - shots
+                        actual_shots = shots_per_thread
+                        if actual_shots < shots:
+                            self.pending_submit[job] = shots - actual_shots, (
+                                future if threads == 1 else done_future
+                            )
+                        else:
+                            # adjust actual pending shots
+                            job.pending_shots += actual_shots - shots
+                    if not has_any_submission:
+                        break  # search next round
                 # save to file
                 if self.filename is not None:
                     self.update_file(self.filename)
                 # call user callback such that they can do some plotting of the intermediate results
                 if loop_callback is not None:
                     loop_callback(self)
-                if len(self.pending_futures) == 0:
+                if len(self.pending_futures) == 0 and len(self.pending_submit) == 0:
                     break
         finally:
             # cancel all pending futures
@@ -343,6 +356,7 @@ class MonteCarloJobExecutor:
                 )
                 job.finished_shots = entry["shots"]
                 job.duration = entry["duration"]
+                job.min_time = 0 if "min_time" not in entry else entry["min_time"]
 
     def update_file(self, filename: str) -> None:
         with portalocker.Lock(
@@ -379,5 +393,6 @@ class MonteCarloJobExecutor:
                 )
                 entry["shots"] = job.finished_shots
                 entry["duration"] = job.duration
+                entry["min_time"] = job.min_time
             json.dump(persist, f, indent=2)
             f.truncate()
