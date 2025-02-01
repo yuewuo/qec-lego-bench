@@ -6,6 +6,12 @@ from dataclasses import field
 from typing import Optional
 
 
+def closed_figure() -> Figure:
+    fig = plt.figure()
+    plt.close(fig)
+    return fig
+
+
 @dataclass
 class LogicalErrorRatePlotter:
     d_vec: list[int]
@@ -16,10 +22,7 @@ class LogicalErrorRatePlotter:
     hdisplay: display.DisplayHandle = field(
         default_factory=lambda: display.display("", display_id=True)
     )
-    fig: Figure = field(default_factory=lambda: plt.figure())
-
-    def __post_init__(self):
-        self.fig.clear()
+    fig: Figure = field(default_factory=closed_figure)
 
     def __call__(self, executor: MonteCarloJobExecutor):
         fig = self.fig
@@ -50,5 +53,5 @@ class LogicalErrorRatePlotter:
                 y_vec.append(stats.failure_rate_value)
                 err_vec.append(stats.failure_rate_uncertainty)
             ax.errorbar(x_vec, y_vec, err_vec, label=f"d={d}")
-        fig.legend()
+        ax.legend()
         self.hdisplay.update(fig)

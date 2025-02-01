@@ -4,6 +4,7 @@ from matplotlib.figure import Figure
 from IPython import display
 from typing import cast
 from dataclasses import field
+from .logical_error_rate_plotter import closed_figure
 
 
 @dataclass
@@ -11,10 +12,7 @@ class JobProgressPlotter:
     hdisplay: display.DisplayHandle = field(
         default_factory=lambda: display.display("", display_id=True)
     )
-    fig: Figure = field(default_factory=lambda: plt.figure())
-
-    def __post_init__(self):
-        self.fig.clear()
+    fig: Figure = field(default_factory=closed_figure)
 
     def __call__(
         self, executor: MonteCarloJobExecutor, show_logical_error: bool = True

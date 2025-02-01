@@ -15,10 +15,7 @@ class DecodingTimePlotter:
     hdisplay: display.DisplayHandle = field(
         default_factory=lambda: display.display("", display_id=True)
     )
-    fig: Figure = field(default_factory=lambda: plt.figure())
-
-    def __post_init__(self):
-        self.fig.clear()
+    fig: Figure = field(default_factory=closed_figure)
 
     def __call__(self, executor: MonteCarloJobExecutor):
         # add more d if the previous one is not too slow
@@ -55,5 +52,5 @@ class DecodingTimePlotter:
                 x_vec.append(d)
                 y_vec.append(job.result.decoding_time / self.rounds)
             ax.errorbar(x_vec, y_vec, label=f"p={p}", fmt="o-")
-        fig.legend()
+        ax.legend()
         self.hdisplay.update(fig)

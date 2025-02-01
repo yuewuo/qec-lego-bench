@@ -37,7 +37,7 @@ from .job_store import JobParameters
 
 def hex_hash(value: Any) -> str:
     sign_mask = (1 << sys.hash_info.width) - 1
-    return f"{hash(value) & sign_mask:#0{sys.hash_info.width//4}X}"[2:]
+    return f"{hash(value) & sign_mask:0{sys.hash_info.width//4}X}"
 
 
 class MonteCarloResult(Protocol):
