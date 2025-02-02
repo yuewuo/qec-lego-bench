@@ -88,6 +88,12 @@ MonteCarloJobSubmitter = Callable[
 ]
 
 
+def empty_submitter(
+    executor: "MonteCarloJobExecutor",
+) -> Iterable[Tuple["MonteCarloJob", int]]:
+    return []
+
+
 class MonteCarloJob:
 
     def __init__(self, *args, **kwargs) -> None:
@@ -258,10 +264,13 @@ class MonteCarloJobExecutor:
 
     def execute(
         self,
-        client: Optional[Client],  # if None is provided, no job will be submitted
-        submitter: MonteCarloJobSubmitter,
+        client: Optional[Client] = None,  # prefer to use `client_connector` instead
+        submitter: MonteCarloJobSubmitter = empty_submitter,
         timeout: float = sys.float_info.max,
         loop_callback: Optional[Callable[["MonteCarloJobExecutor"], None]] = None,
+        force_finished: bool = False,
+        client_connector: Optional[Callable[[], Client]] = None,
+        shutdown_cluster: bool = False,
     ) -> None:
         if client is not None:
             assert isinstance(client, Client)
@@ -347,7 +356,7 @@ class MonteCarloJobExecutor:
                         break
                 # fair submission
                 while (
-                    client is not None
+                    not force_finished
                     and len(self.future_info) < self.config.max_submitted_job
                 ):
                     has_any_submission = False
@@ -362,6 +371,9 @@ class MonteCarloJobExecutor:
                             job, shots
                         )
                         has_any_submission = True
+                        if client is None:
+                            assert client_connector is not None
+                            client = client_connector()
                         future = client.submit(
                             monitored_job,
                             self.func,
@@ -398,12 +410,20 @@ class MonteCarloJobExecutor:
         finally:
             # cancel all pending futures
             for future in self.pending_futures:
-                future.cancel()
+                try:
+                    future.cancel()
+                except Exception as e:
+                    print("cancel failed", e)
             self.pending_futures = []
             self.future_info.clear()
             self.pending_submit.clear()
             for job in self:
                 job.pending_shots = 0
+            if shutdown_cluster:
+                print(
+                    "shutting down the cluster; if this is not desired, set `shutdown_cluster` to `False`"
+                )
+                client.shutdown()
 
     def _loop_again(self) -> bool:
         if len(self.pending_futures) > 0:

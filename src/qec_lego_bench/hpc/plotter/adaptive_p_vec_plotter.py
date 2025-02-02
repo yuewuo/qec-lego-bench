@@ -1,12 +1,10 @@
 from ..monte_carlo import *
-import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from IPython import display
-from typing import cast, Any
+from typing import Any
 from dataclasses import field
 from .logical_error_rate_plotter import closed_figure
 from ..submitter.adaptive_p_vec_submitter import AdaptivePVec
-from slugify import slugify
 
 
 @dataclass
