@@ -9,3 +9,4 @@ __pycache__
 *.csv
 *.json
 slurm_job
+.unison.*
