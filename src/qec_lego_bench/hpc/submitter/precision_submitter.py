@@ -18,7 +18,6 @@ class PrecisionSubmitter:
     ) -> list[tuple[MonteCarloJob, int]]:
         submit = []
         for job in jobs:
-            print(job)
             if job.result is None:
                 continue
             if job.duration >= self.time_limit:

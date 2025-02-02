@@ -13,6 +13,14 @@ Subpackages
 Submodules
 ----------
 
+qec\_lego\_bench.hpc.cluster\_util module
+-----------------------------------------
+
+.. automodule:: qec_lego_bench.hpc.cluster_util
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 qec\_lego\_bench.hpc.job\_store module
 --------------------------------------
 
@@ -25,6 +33,14 @@ qec\_lego\_bench.hpc.monte\_carlo module
 ----------------------------------------
 
 .. automodule:: qec_lego_bench.hpc.monte_carlo
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+qec\_lego\_bench.hpc.panic\_store module
+----------------------------------------
+
+.. automodule:: qec_lego_bench.hpc.panic_store
    :members:
    :undoc-members:
    :show-inheritance:

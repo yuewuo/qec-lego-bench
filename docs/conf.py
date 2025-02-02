@@ -75,6 +75,8 @@ extensions = [
     "nbsphinx",
 ]
 
+nbsphinx_execute = "never"  # always use the current notebook outputs
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
