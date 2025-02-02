@@ -81,17 +81,17 @@ class AdaptivePVecSubmitter:
             # now let's handle the trusted data points. We can safely use them to create more p values
             for job in trusted_jobs:
                 p: float = job["p"]
-                config: DotMap = job["config"]
+                job_config: DotMap = job["config"]
                 i = self.ap_vec.i(p)
                 # first of all, let's make sure we submit more jobs to the lower side and the upper side
                 for parallel_i in range(i - self.parallel_p_count, i + 2):  # also i+1
                     parallel_p = self.ap_vec.p(parallel_i)
                     if parallel_p > self.ap_vec.p_upper:
                         continue
-                    parallel_job = executor.get_job(config=config, p=parallel_p)
+                    parallel_job = executor.get_job(config=job_config, p=parallel_p)
                     if parallel_job is None:
                         # create this job according to the `parallel_p_range` parameter
-                        parallel_job = MonteCarloJob(config=config, p=parallel_p)
+                        parallel_job = MonteCarloJob(config=job_config, p=parallel_p)
                         executor.add_job(parallel_job)
                 # then, let's try to make the trusted job to reach the target precision, if time permits
                 if job.duration >= self.time_limit:
@@ -175,6 +175,6 @@ class AdaptivePVec:
         self, executor: MonteCarloJobExecutor, config: DotMap, searching_for: int = 20
     ) -> list[MonteCarloJob]:
         return [
-            executor.get_job(p=p, config=config)
+            executor.get_job_assert(p=p, config=config)
             for p in self.p_vec(executor, config, searching_for)
         ]

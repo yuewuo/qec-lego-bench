@@ -262,6 +262,11 @@ class MonteCarloJobExecutor:
             return None
         return self.jobs[hash_value]
 
+    def get_job_assert(self, *args, **kwargs) -> MonteCarloJob:
+        job = self.get_job(*args, **kwargs)
+        assert job is not None, f"Job not found: {args}, {kwargs}"
+        return job
+
     def execute(
         self,
         client: Optional[Client] = None,  # prefer to use `client_connector` instead
@@ -361,7 +366,7 @@ class MonteCarloJobExecutor:
                 ):
                     has_any_submission = False
                     for job in list(self.pending_submit.keys()):
-                        if job in self.panics:
+                        if job.parameters in self.panics:
                             continue  # do not submit any job that has panicked before
                         shots, done_future = self.pending_submit[job]
                         if not done_future.done():
@@ -419,7 +424,7 @@ class MonteCarloJobExecutor:
             self.pending_submit.clear()
             for job in self:
                 job.pending_shots = 0
-            if shutdown_cluster:
+            if shutdown_cluster and client is not None:
                 print(
                     "shutting down the cluster; if this is not desired, set `shutdown_cluster` to `False`"
                 )

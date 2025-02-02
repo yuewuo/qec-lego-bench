@@ -131,6 +131,11 @@ class JobStore:
             return None
         return self.jobs[hash_value]
 
+    def get_job_assert(self, *args, **kwargs) -> Job:
+        job = self.get_job(*args, **kwargs)
+        assert job is not None, f"Job not found: {args}, {kwargs}"
+        return job
+
     def load_from_file(self, filename: str, target_job: Optional[Job] = None) -> None:
         if not os.path.exists(filename):
             return

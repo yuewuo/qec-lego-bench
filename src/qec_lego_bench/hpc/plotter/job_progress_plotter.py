@@ -58,7 +58,7 @@ class JobProgressPlotter:
                 pending_submit = executor.pending_submit.get(job)
                 if pending_submit is not None:
                     submitted -= pending_submit[0]
-                job_future_percentage = 0
+                job_future_percentage = 0.0
                 if len(executor.pending_futures) > 0:
                     job_future_percentage = job_pending_futures_count[job] / len(
                         executor.pending_futures
@@ -85,7 +85,7 @@ class JobProgressPlotter:
                     )
                 else:
                     row.extend(["-", "-", "-"])
-            if job in executor.panics:
+            if job.parameters in executor.panics:
                 panic_jobs.append(row)
             elif job.pending_shots > 0:
                 pending_jobs.append(row)
@@ -105,7 +105,7 @@ class JobProgressPlotter:
             return
         rcolors = []
         orange = plt.cm.Oranges(0.1)  # type: ignore
-        red = plt.cm.Reds(0.5)
+        red = plt.cm.Reds(0.5)  # type: ignore
         for row in pending_jobs:
             rcolors.append(orange)
         for row in panic_jobs:

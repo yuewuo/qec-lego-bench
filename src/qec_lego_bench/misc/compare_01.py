@@ -4,7 +4,7 @@ from qec_lego_bench.stats import Stats
 import os
 
 
-def read_01(filepath: str) -> list[tuple[int]]:
+def read_01(filepath: str) -> list[tuple[int, ...]]:
     result = []
     with open(filepath) as f:
         for line in f.readlines():

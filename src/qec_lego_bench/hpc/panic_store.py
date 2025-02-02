@@ -16,9 +16,9 @@ class PanicStore:
 
     def get_panic(self, *args, **kwargs) -> Optional["JobPanic"]:
         parameters = JobParameters(args, kwargs)
-        if parameters.hash not in self.jobs:
+        if parameters.hash not in self.store:
             return None
-        panic = self.jobs[parameters.hash]
+        panic = self.store[parameters.hash]
         assert (
             parameters == panic.parameters
         ), f"hash conflict: {parameters} != {panic.parameters} but has same hash {parameters.hash}"

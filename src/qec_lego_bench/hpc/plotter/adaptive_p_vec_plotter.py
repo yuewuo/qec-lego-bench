@@ -2,6 +2,7 @@ from ..monte_carlo import *
 from matplotlib.figure import Figure
 from IPython import display
 from typing import Any
+from dotmap import DotMap
 from dataclasses import field
 from .logical_error_rate_plotter import closed_figure
 from ..submitter.adaptive_p_vec_submitter import AdaptivePVec
@@ -9,7 +10,7 @@ from ..submitter.adaptive_p_vec_submitter import AdaptivePVec
 
 @dataclass
 class AdaptivePVecPlotter:
-    config_vec: list[dict[str, Any]]
+    config_vec: list[DotMap]
     ap_vec: AdaptivePVec
 
     hdisplay: display.DisplayHandle = field(

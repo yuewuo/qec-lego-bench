@@ -18,6 +18,8 @@ module = [
     "chromobius.*",
     "mwpf_rational.*",
     "uncertainties.*",
+    "hjson.*",
+    "dotmap.*",
 ]
 follow_untyped_imports = true
 ignore_missing_imports = true
