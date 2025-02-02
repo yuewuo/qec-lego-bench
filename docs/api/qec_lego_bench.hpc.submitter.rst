@@ -1,10 +1,16 @@
-qec\_lego\_bench.hpc.submitter namespace
-========================================
-
-.. py:module:: qec_lego_bench.hpc.submitter
+qec\_lego\_bench.hpc.submitter package
+======================================
 
 Submodules
 ----------
+
+qec\_lego\_bench.hpc.submitter.adaptive\_p\_vec\_submitter module
+-----------------------------------------------------------------
+
+.. automodule:: qec_lego_bench.hpc.submitter.adaptive_p_vec_submitter
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 qec\_lego\_bench.hpc.submitter.min\_shots\_submitter module
 -----------------------------------------------------------
@@ -22,10 +28,10 @@ qec\_lego\_bench.hpc.submitter.precision\_submitter module
    :undoc-members:
    :show-inheritance:
 
-qec\_lego\_bench.hpc.submitter.small\_logical\_error\_rate\_submitter module
-----------------------------------------------------------------------------
+Module contents
+---------------
 
-.. automodule:: qec_lego_bench.hpc.submitter.small_logical_error_rate_submitter
+.. automodule:: qec_lego_bench.hpc.submitter
    :members:
    :undoc-members:
    :show-inheritance:

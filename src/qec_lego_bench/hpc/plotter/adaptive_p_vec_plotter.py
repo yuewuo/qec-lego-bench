@@ -35,7 +35,6 @@ class AdaptivePVecPlotter:
             y_vec = []
             err_vec = []
             jobs = self.ap_vec.jobs(executor, config)
-            print(f"plotting jobs: {jobs}")
             for job in jobs:
                 p: float = job["p"]
                 if job is None or job.result is None:
