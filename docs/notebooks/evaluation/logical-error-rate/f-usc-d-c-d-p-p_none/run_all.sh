@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # prefix start
-RID=zz-2
+RID=zz-3
 # prefix end
 
 tmux new-session -d -s mwpm_f-usc-d-c-d-p-p_none "srun --time=23:55:00 --mem=10G --cpus-per-task=2 papermill mwpm.ipynb ${RID}.mwpm.ipynb"
