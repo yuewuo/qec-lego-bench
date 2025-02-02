@@ -1,9 +1,5 @@
 from ..monte_carlo import *
-
-
-def precision_to_errors(precision: float) -> int:
-    # precision * errors/shots ~= 2.58 * sqrt(errors)/shots
-    return math.ceil((2.58 / precision) ** 2)
+from qec_lego_bench.stats import precision_to_errors
 
 
 @dataclass

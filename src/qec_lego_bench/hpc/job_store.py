@@ -109,11 +109,15 @@ class JobStore:
         for job in self.jobs.values():
             yield job
 
-    def add_job(self, job: Job, load_from_file: bool = True) -> None:
+    def add_job(
+        self, job: Job, load_from_file: bool = True, skip_if_exists: bool = False
+    ) -> None:
+        if skip_if_exists and job.hash in self.jobs:
+            return
         assert job.hash not in self.jobs, "Job already exists"
         self.jobs[job.hash] = job
         if load_from_file and self.filename is not None:
-            self.load_from_file(self.filename)
+            self.load_from_file(self.filename, job)
 
     def get_job(self, *args, **kwargs) -> Optional[Job]:
         hash_value = JobParameters(args, kwargs).hash
@@ -121,12 +125,13 @@ class JobStore:
             return None
         return self.jobs[hash_value]
 
-    def load_from_file(self, filename: str) -> None:
+    def load_from_file(self, filename: str, target_job: Optional[Job] = None) -> None:
         if not os.path.exists(filename):
             return
         with portalocker.Lock(filename, "r") as f:
             persist = json.load(f)
-            for job in self.jobs.values():
+            jobs = self.jobs.values() if target_job is None else [target_job]
+            for job in jobs:
                 if job.hash not in persist:
                     continue
                 entry = persist[job.hash]

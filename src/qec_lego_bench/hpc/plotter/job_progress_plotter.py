@@ -14,6 +14,9 @@ class JobProgressPlotter:
     )
     fig: Figure = field(default_factory=closed_figure)
 
+    # to make sure the figure is large enough and the text is readable...
+    min_rows: int = 30
+
     def __call__(
         self, executor: MonteCarloJobExecutor, show_logical_error: bool = True
     ):
@@ -75,6 +78,8 @@ class JobProgressPlotter:
                 pending_jobs.append(row)
             else:
                 finished_jobs.append(row)
+        while len(pending_jobs) + len(finished_jobs) < self.min_rows:
+            finished_jobs.append([MonteCarloJob()] + ["-"] * (len(column_headers)))
         pending_jobs.sort(key=lambda row: -cast(MonteCarloJob, row[0]).duration)
         finished_jobs.sort(key=lambda row: -cast(MonteCarloJob, row[0]).duration)
         cell_text = []

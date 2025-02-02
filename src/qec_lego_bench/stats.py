@@ -1,6 +1,12 @@
 import sinter
 import numpy as np
 from uncertainties import ufloat
+import math
+
+
+def precision_to_errors(precision: float) -> int:
+    # precision * errors/shots ~= 2.58 * sqrt(errors)/shots
+    return math.ceil((2.58 / precision) ** 2)
 
 
 class Stats:

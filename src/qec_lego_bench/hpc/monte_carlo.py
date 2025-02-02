@@ -82,7 +82,7 @@ MonteCarloFunc = Callable[Concatenate[int, P], Tuple[int, MonteCarloResult]]
 A function to decide which is the next job to run and how many shots to run
 """
 MonteCarloJobSubmitter = Callable[
-    [Iterable["MonteCarloJob"]], Iterable[Tuple["MonteCarloJob", int]]
+    ["MonteCarloJobExecutor"], Iterable[Tuple["MonteCarloJob", int]]
 ]
 
 
@@ -143,6 +143,8 @@ class MonteCarloExecutorConfig:
     # a loose upper bound of how many submitted jobs there could be, because of memory leak
     # in dask library: https://github.com/dask/distributed/pull/6342;
     max_submitted_job: int = 1000
+    # iteratively call the submitter function until no job is submitted
+    iterative_submitter: bool = True
 
     # return the split of the shots and how many threads
     def warmed_up_split(self, job: MonteCarloJob, shots: int) -> Tuple[int, int]:
@@ -215,9 +217,18 @@ class MonteCarloJobExecutor:
         for job in self.jobs.values():
             yield job
 
-    def add_job(self, job: MonteCarloJob) -> None:
+    def add_job(
+        self,
+        job: MonteCarloJob,
+        load_from_file: bool = True,
+        skip_if_exists: bool = False,
+    ) -> None:
+        if skip_if_exists and job.hash in self.jobs:
+            return
         assert job.hash not in self.jobs, "Job already exists"
         self.jobs[job.hash] = job
+        if load_from_file and self.filename is not None:
+            self.load_from_file(self.filename, job)
 
     def get_job(self, *args, **kwargs) -> Optional[MonteCarloJob]:
         hash_value = JobParameters(args, kwargs).hash
@@ -227,63 +238,84 @@ class MonteCarloJobExecutor:
 
     def execute(
         self,
-        client: Client,
+        client: Optional[Client],  # if None is provided, no job will be submitted
         submitter: MonteCarloJobSubmitter,
         timeout: float = sys.float_info.max,
         loop_callback: Optional[Callable[["MonteCarloJobExecutor"], None]] = None,
     ) -> None:
-        assert isinstance(client, Client)
+        if client is not None:
+            assert isinstance(client, Client)
         if loop_callback is not None:
             loop_callback(self)
         start = time.time()
         try:
             while True:
-                remaining_time = timeout - (time.time() - start)
-                if remaining_time <= 0:
-                    raise TimeoutError()
-                try:
-                    futures: DoneAndNotDoneFutures = wait(
-                        self.pending_futures,
-                        return_when=FIRST_COMPLETED,
-                        timeout=timeout - (time.time() - start),
-                    )
-                except DaskTimeoutError as e:
-                    raise TimeoutError()
-                assert len(futures.done) + len(futures.not_done) == len(
-                    self.pending_futures
-                ), "API error"
-                for done, job_result in as_completed(futures.done, with_results=True):
-                    assert isinstance(done, Future)
-                    job = self.future_info[done]
-                    if job.result is None:
-                        job.result = job_result.result
-                    else:
-                        job.result += job_result.result
-                    job.duration += job_result.duration
-                    job.finished_shots += job_result.actual_shots
-                    job.pending_shots -= job_result.shots
-                    if job.min_time is None:
-                        job.min_time = job_result.duration
-                    else:
-                        job.min_time = min(job.min_time, job_result.duration)
-                    del self.future_info[done]
-                    client.cancel(done)
-                self.pending_futures = list(futures.not_done)  # type: ignore
+                if client is not None:
+                    remaining_time = timeout - (time.time() - start)
+                    if remaining_time <= 0:
+                        raise TimeoutError()
+                    try:
+                        futures: DoneAndNotDoneFutures = wait(
+                            self.pending_futures,
+                            return_when=FIRST_COMPLETED,
+                            timeout=timeout - (time.time() - start),
+                        )
+                    except DaskTimeoutError as e:
+                        raise TimeoutError()
+                    assert len(futures.done) + len(futures.not_done) == len(
+                        self.pending_futures
+                    ), "API error"
+                    for done, job_result in as_completed(
+                        futures.done, with_results=True
+                    ):
+                        assert isinstance(done, Future)
+                        job = self.future_info[done]
+                        if job.result is None:
+                            job.result = job_result.result
+                        else:
+                            job.result += job_result.result
+                        job.duration += job_result.duration
+                        job.finished_shots += job_result.actual_shots
+                        job.pending_shots -= job_result.shots
+                        if job.min_time is None:
+                            job.min_time = job_result.duration
+                        else:
+                            job.min_time = min(job.min_time, job_result.duration)
+                        del self.future_info[done]
+                        client.cancel(done)
+                    self.pending_futures = list(futures.not_done)  # type: ignore
                 # get the next job to run
-                for job, shots in submitter(self):
-                    shots = max(int(shots), 0)
-                    # submit jobs such that it runs for this number of shots
-                    job.pending_shots += shots
-                    if job in self.pending_submit:
-                        remaining, blocking_future = self.pending_submit[job]
-                        self.pending_submit[job] = remaining + shots, blocking_future
-                    else:
-                        # add the job to the pending submit and mock a done job such that it will be submitted later
-                        mock_future: ConcurrentFuture = ConcurrentFuture()
-                        mock_future.set_result(0)
-                        self.pending_submit[job] = shots, cast(Future, mock_future)
+                while True:
+                    # make the development of the submitter easier by iteratively call them
+                    last_job_count = len(self.jobs)
+                    submit = list(submitter(self))
+                    if len(submit) == 0 and last_job_count == len(self.jobs):
+                        break
+                    # run those jobs
+                    for job, shots in submit:
+                        assert shots >= 0
+                        if shots == 0:
+                            continue
+                        # submit jobs such that it runs for this number of shots
+                        job.pending_shots += shots
+                        if job in self.pending_submit:
+                            remaining, blocking_future = self.pending_submit[job]
+                            self.pending_submit[job] = (
+                                remaining + shots,
+                                blocking_future,
+                            )
+                        else:
+                            # add the job to the pending submit and mock a done job such that it will be submitted later
+                            mock_future: ConcurrentFuture = ConcurrentFuture()
+                            mock_future.set_result(0)
+                            self.pending_submit[job] = shots, cast(Future, mock_future)
+                    if not self.config.iterative_submitter:  # backward compatible
+                        break
                 # fair submission
-                while len(self.future_info) < self.config.max_submitted_job:
+                while (
+                    client is not None
+                    and len(self.future_info) < self.config.max_submitted_job
+                ):
                     has_any_submission = False
                     for job in list(self.pending_submit.keys()):
                         shots, done_future = self.pending_submit[job]
@@ -316,12 +348,14 @@ class MonteCarloJobExecutor:
                     if not has_any_submission:
                         break  # search next round
                 # save to file
-                if self.filename is not None:
+                if client is not None and self.filename is not None:
                     self.update_file(self.filename)
                 # call user callback such that they can do some plotting of the intermediate results
                 if loop_callback is not None:
                     loop_callback(self)
                 if len(self.pending_futures) == 0 and len(self.pending_submit) == 0:
+                    break
+                if client is None:
                     break
         finally:
             # cancel all pending futures
@@ -333,12 +367,21 @@ class MonteCarloJobExecutor:
             for job in self:
                 job.pending_shots = 0
 
-    def load_from_file(self, filename: str) -> None:
+    def no_pending(self) -> bool:
+        for job in self:
+            if job.pending_shots > 0:
+                return False
+        return True
+
+    def load_from_file(
+        self, filename: str, target_job: Optional[MonteCarloJob] = None
+    ) -> None:
         if not os.path.exists(filename):
             return
         with portalocker.Lock(filename, "r") as f:
             persist = json.load(f)
-            for job in self.jobs.values():
+            jobs = self.jobs.values() if target_job is None else [target_job]
+            for job in jobs:
                 if job.hash not in persist:
                     continue
                 entry = persist[job.hash]
