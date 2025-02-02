@@ -112,6 +112,7 @@ class AdaptivePVecSubmitter:
 class AdaptivePVec:
     p_center: float  # center p to start searching
     per10_p_count: int  # how many p to take per x10 interval
+    p_bias: int = 0  # bias according to the `per10_p_count`, negative -> smaller p
     p_upper: float = (
         0.4  # maximum value of physical error rate; usually 40% but could be lower for some noise mode
     )
@@ -124,17 +125,21 @@ class AdaptivePVec:
     def i(self, p: float) -> int:
         return round(self.per10_p_count * math.log10(p / self.p_center))
 
+    @property
+    def biased_p_center(self) -> float:
+        return self.p(self.p_bias)
+
     # find the index vector for a given config in an executor
     def i_vec(
         self, executor: MonteCarloJobExecutor, config: DotMap, searching_for: int = 20
     ) -> list[int]:
         assert (
-            executor.get_job(p=self.p_center, config=config) is not None
-        ), "p_center should exist in the executor"
+            executor.get_job(p=self.biased_p_center, config=config) is not None
+        ), "biased_p_center should exist in the executor"
         assert searching_for > 0
-        i_vec = [0]
+        i_vec = [self.p_bias]
         # first find the lower side
-        lower_i = -1
+        lower_i = self.p_bias - 1
         while True:
             found = False
             for i in range(lower_i, lower_i - searching_for, -1):
@@ -147,7 +152,7 @@ class AdaptivePVec:
             if not found:
                 break
         # then search the upper side
-        upper_i = 1
+        upper_i = self.p_bias + 1
         while True:
             found = False
             for i in range(upper_i, upper_i + searching_for):

@@ -1,0 +1,3 @@
+
+# notebooks in the subfolder must be added to git manually, to avoid unnecessary git history
+*/**/*.ipynb

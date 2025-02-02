@@ -378,6 +378,7 @@ class MonteCarloJobExecutor:
                         has_any_submission = True
                         if client is None:
                             assert client_connector is not None
+                            print("winding up a new client")
                             client = client_connector()
                         future = client.submit(
                             monitored_job,
