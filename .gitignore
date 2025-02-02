@@ -10,3 +10,6 @@ __pycache__
 *.json
 slurm_job
 .unison.*
+
+# papermilled jupyter notebooks
+zz-*

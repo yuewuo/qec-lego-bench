@@ -1,10 +1,9 @@
 #!/bin/bash
 
 # prefix start
-RID=1
+RID=zz-2
 # prefix end
 
-tmux new-session -d -s mwpm_f-color-d-c-d-p-p_none "srun --time=12:00:00 --mem=10G --cpus-per-task=2 papermill mwpm.ipynb ${RID}.mwpm.ipynb"
 tmux new-session -d -s mwpf_f-color-d-c-d-p-p_none "srun --time=12:00:00 --mem=10G --cpus-per-task=2 papermill mwpf.ipynb ${RID}.mwpf.ipynb"
 tmux new-session -d -s huf_f-color-d-c-d-p-p_none "srun --time=12:00:00 --mem=10G --cpus-per-task=2 papermill huf.ipynb ${RID}.huf.ipynb"
 tmux new-session -d -s f-mwpf-c-50-c-d_f-color-d-c-d-p-p_none "srun --time=12:00:00 --mem=10G --cpus-per-task=2 papermill f-mwpf-c-50-c-d.ipynb ${RID}.f-mwpf-c-50-c-d.ipynb"
