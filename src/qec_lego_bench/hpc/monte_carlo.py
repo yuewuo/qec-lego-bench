@@ -33,6 +33,8 @@ import json
 import portalocker
 import os
 from .job_store import JobParameters
+from .panic_store import PanicStore, JobPanic
+import traceback
 
 
 def hex_hash(value: Any) -> str:
@@ -129,6 +131,10 @@ class MonteCarloJob:
     def hash(self) -> str:
         return self._params.hash
 
+    @property
+    def parameters(self) -> JobParameters:
+        return self._params
+
 
 @dataclass
 class MonteCarloExecutorConfig:
@@ -173,19 +179,24 @@ class MonteCarloExecutorConfig:
 
 @dataclass
 class MonitoredResult:
-    result: MonteCarloResult
+    result: MonteCarloResult | None
     shots: int = 0
     actual_shots: int = 0
     duration: float = 0
+    panic_info: Optional[str] = None
 
 
 def monitored_job(
     func: MonteCarloFunc, shots: int, job_id: int, args: tuple, kwargs: dict
 ) -> MonitoredResult:
     start = time.thread_time()
-    actual_shots, result = func(shots, *args, **kwargs)
+    actual_shots, result, panic_info = 0, None, None
+    try:
+        actual_shots, result = func(shots, *args, **kwargs)
+    except Exception as e:
+        panic_info = traceback.format_exc()
     duration = time.thread_time() - start
-    return MonitoredResult(result, shots, actual_shots, duration)
+    return MonitoredResult(result, shots, actual_shots, duration, panic_info=panic_info)
 
 
 class MonteCarloJobExecutor:
@@ -195,6 +206,9 @@ class MonteCarloJobExecutor:
         jobs: Sequence[MonteCarloJob],
         config: Optional[MonteCarloExecutorConfig] = None,
         filename: Optional[str] = None,
+        panic_filename: Optional[
+            str
+        ] = None,  # hjson file to store the panic information
         # used when reading from file
         result_type: Type[MonteCarloResult] = LogicalErrorResult,
     ) -> None:
@@ -208,6 +222,12 @@ class MonteCarloJobExecutor:
         # the remaining shots due to insufficient number of samples for estimation runtime
         self.pending_submit: dict[MonteCarloJob, tuple[int, Future]] = {}
         self.filename = filename
+        if panic_filename is None:
+            if filename is not None:
+                panic_filename = filename + ".panic.hjson"
+            else:
+                panic_filename = "panic.hjson"
+        self.panics = PanicStore(panic_filename)
         self.result_type = result_type
         self.num_jobs = 0  # used to uniquely set job ID to avoid caching
         if filename is not None:
@@ -268,19 +288,33 @@ class MonteCarloJobExecutor:
                     for done, job_result in as_completed(
                         futures.done, with_results=True
                     ):
+                        job_result = cast(MonitoredResult, job_result)
                         assert isinstance(done, Future)
                         job = self.future_info[done]
-                        if job.result is None:
-                            job.result = job_result.result
+                        if job_result.panic_info is not None:
+                            # job panics, record it
+                            self.panics.add_panic(
+                                JobPanic(
+                                    parameters=job.parameters,
+                                    latest=json.dumps(
+                                        dict(shots=job.shots, duration=job.duration)
+                                    ),
+                                ).add_panic(job_result.panic_info)
+                            )
                         else:
-                            job.result += job_result.result
-                        job.duration += job_result.duration
-                        job.finished_shots += job_result.actual_shots
-                        job.pending_shots -= job_result.shots
-                        if job.min_time is None:
-                            job.min_time = job_result.duration
-                        else:
-                            job.min_time = min(job.min_time, job_result.duration)
+                            result = job_result.result
+                            assert result is not None
+                            if job.result is None:
+                                job.result = result
+                            else:
+                                job.result += result
+                            job.duration += job_result.duration
+                            job.finished_shots += job_result.actual_shots
+                            job.pending_shots -= job_result.shots
+                            if job.min_time is None:
+                                job.min_time = job_result.duration
+                            else:
+                                job.min_time = min(job.min_time, job_result.duration)
                         del self.future_info[done]
                         client.cancel(done)
                     self.pending_futures = list(futures.not_done)  # type: ignore
@@ -318,6 +352,8 @@ class MonteCarloJobExecutor:
                 ):
                     has_any_submission = False
                     for job in list(self.pending_submit.keys()):
+                        if job in self.panics:
+                            continue  # do not submit any job that has panicked before
                         shots, done_future = self.pending_submit[job]
                         if not done_future.done():
                             continue  # keep waiting
@@ -353,6 +389,8 @@ class MonteCarloJobExecutor:
                 # call user callback such that they can do some plotting of the intermediate results
                 if loop_callback is not None:
                     loop_callback(self)
+                if not self._loop_again():
+                    break
                 if len(self.pending_futures) == 0 and len(self.pending_submit) == 0:
                     break
                 if client is None:
@@ -367,8 +405,19 @@ class MonteCarloJobExecutor:
             for job in self:
                 job.pending_shots = 0
 
+    def _loop_again(self) -> bool:
+        if len(self.pending_futures) > 0:
+            return True
+        # find any pending submit that has not panicked
+        for job in self.pending_submit.keys():
+            if not job.parameters in self.panics:
+                return True
+        return False
+
     def no_pending(self) -> bool:
         for job in self:
+            if job.parameters in self.panics:
+                continue  # it is not pending, just panicked
             if job.pending_shots > 0:
                 return False
         return True

@@ -25,6 +25,7 @@ class JobProgressPlotter:
         ax.clear()
         pending_jobs = []
         finished_jobs = []
+        panic_jobs = []
         column_headers = [
             "Job",
             "Finished",
@@ -42,26 +43,36 @@ class JobProgressPlotter:
             job_pending_futures_count[job] += 1
         for job in executor:
             if job.expecting_shots == 0:
-                continue
-            submitted = job.pending_shots
-            pending_submit = executor.pending_submit.get(job)
-            if pending_submit is not None:
-                submitted -= pending_submit[0]
-            job_future_percentage = 0
-            if len(executor.pending_futures) > 0:
-                job_future_percentage = job_pending_futures_count[job] / len(
-                    executor.pending_futures
-                )
-            row = [
-                job,
-                repr(job),
-                f"{job.finished_shots} ({int(job.finished_shots/job.expecting_shots*100)}%)",
-                f"{job.pending_shots} ({int(job.pending_shots/job.expecting_shots*100)}%)",
-                f"{submitted} ({int(submitted/job.expecting_shots*100)}%)",
-                f"{job_pending_futures_count[job]} ({int(job_future_percentage*100)}%)",
-                job.expecting_shots,
-                f"{job.duration:.1f}s ({job.duration/60:.1f}min)",
-            ]
+                row = [
+                    job,
+                    repr(job),
+                    f"{job.finished_shots}",
+                    "-",
+                    "-",
+                    "-",
+                    "-",
+                    f"{job.duration:.1f}s ({job.duration/60:.1f}min)",
+                ]
+            else:
+                submitted = job.pending_shots
+                pending_submit = executor.pending_submit.get(job)
+                if pending_submit is not None:
+                    submitted -= pending_submit[0]
+                job_future_percentage = 0
+                if len(executor.pending_futures) > 0:
+                    job_future_percentage = job_pending_futures_count[job] / len(
+                        executor.pending_futures
+                    )
+                row = [
+                    job,
+                    repr(job),
+                    f"{job.finished_shots} ({int(job.finished_shots/job.expecting_shots*100)}%)",
+                    f"{job.pending_shots} ({int(job.pending_shots/job.expecting_shots*100)}%)",
+                    f"{submitted} ({int(submitted/job.expecting_shots*100)}%)",
+                    f"{job_pending_futures_count[job]} ({int(job_future_percentage*100)}%)",
+                    job.expecting_shots,
+                    f"{job.duration:.1f}s ({job.duration/60:.1f}min)",
+                ]
             if show_logical_error:
                 if job.result is not None:
                     stats = job.result.stats_of(job)  # type: ignore
@@ -74,7 +85,9 @@ class JobProgressPlotter:
                     )
                 else:
                     row.extend(["-", "-", "-"])
-            if job.pending_shots > 0:
+            if job in executor.panics:
+                panic_jobs.append(row)
+            elif job.pending_shots > 0:
                 pending_jobs.append(row)
             else:
                 finished_jobs.append(row)
@@ -84,7 +97,7 @@ class JobProgressPlotter:
         finished_jobs.sort(key=lambda row: -cast(MonteCarloJob, row[0]).duration)
         cell_text = []
         row_headers = []
-        for row in pending_jobs + finished_jobs:
+        for row in pending_jobs + panic_jobs + finished_jobs:
             job = cast(MonteCarloJob, row[0])
             row_headers.append(job.hash[:6])
             cell_text.append([str(e) for e in row[1:]])
@@ -92,8 +105,11 @@ class JobProgressPlotter:
             return
         rcolors = []
         orange = plt.cm.Oranges(0.1)  # type: ignore
+        red = plt.cm.Reds(0.5)
         for row in pending_jobs:
             rcolors.append(orange)
+        for row in panic_jobs:
+            rcolors.append(red)
         rcolors.extend(["#FFFFFF"] * len(finished_jobs))
         the_table = ax.table(
             cellText=cell_text,

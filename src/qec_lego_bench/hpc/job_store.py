@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 import functools
 from stablehash import stablehash
 from typing import Sequence, Optional, Iterator, Any, Protocol, TypeVar, Type, Callable
@@ -9,6 +10,7 @@ import time
 import sys
 
 
+@dataclass_json
 @dataclass(frozen=True)
 class JobParameters:
     args: tuple
@@ -72,6 +74,10 @@ class Job:
     @property
     def hash(self) -> str:
         return self._params.hash
+
+    @property
+    def parameters(self) -> JobParameters:
+        return self._params
 
 
 JobFunc = Callable[..., JobResult]
