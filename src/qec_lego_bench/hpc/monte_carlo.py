@@ -199,7 +199,7 @@ def monitored_job(
     actual_shots, result, panic_info = 0, None, None
     try:
         actual_shots, result = func(shots, *args, **kwargs)
-    except Exception as e:
+    except BaseException as e:
         panic_info = traceback.format_exc()
     duration = time.thread_time() - start
     return MonitoredResult(result, shots, actual_shots, duration, panic_info=panic_info)
