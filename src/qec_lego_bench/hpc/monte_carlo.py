@@ -165,9 +165,9 @@ class MonteCarloExecutorConfig:
             return 1, 1  # submit one shot as an estimation of the initialization time
         if job.finished_shots < self.min_shots_before_estimation:
             return job.finished_shots, 1  # double the finished jobs and see
-        per_shot_time = (
-            job.duration - job.min_time * job.finished_tasks
-        ) / job.finished_shots
+        per_shot_time = (job.duration - job.min_time * job.finished_tasks) / max(
+            1, job.finished_shots - job.finished_tasks
+        )
         if per_shot_time < 1e-6:
             # which doesn't make sense, maybe something wrong with min_time; fall back
             per_shot_time = job.duration / job.finished_shots
