@@ -8,6 +8,7 @@ __pycache__
 /build
 *.csv
 *.json
+*.hjson
 slurm_job
 .unison.*
 

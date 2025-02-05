@@ -103,6 +103,7 @@ class MonteCarloJob:
         self.duration: float = 0  # overall time of the finished shots
         self.result: Optional[MonteCarloResult] = None
         self.min_time: Optional[float] = None  # an estimation of the init time
+        self.finished_tasks: int = 0  # each task may have multiple shots
 
     def __repr__(self):
         args = [str(arg) for arg in self.args]
@@ -163,8 +164,13 @@ class MonteCarloExecutorConfig:
         if job.min_time is None:
             return 1, 1  # submit one shot as an estimation of the initialization time
         if job.finished_shots < self.min_shots_before_estimation:
-            return self.min_shots_before_estimation, 1
-        per_shot_time = (job.duration - job.min_time) / job.finished_shots
+            return job.finished_shots, 1  # double the finished jobs and see
+        per_shot_time = (
+            job.duration - job.min_time * job.finished_tasks
+        ) / job.finished_shots
+        if per_shot_time < 1e-6:
+            # which doesn't make sense, maybe something wrong with min_time; fall back
+            per_shot_time = job.duration / job.finished_shots
         if job.duration - job.min_time < self.min_multi_thread_duration:
             target_shots = int(self.min_multi_thread_duration / per_shot_time)
             target_shots = min(shots, target_shots)
@@ -325,6 +331,7 @@ class MonteCarloJobExecutor:
                             job.duration += job_result.duration
                             job.finished_shots += job_result.actual_shots
                             job.pending_shots -= job_result.shots
+                            job.finished_tasks += 1
                             if job.min_time is None:
                                 job.min_time = job_result.duration
                             else:
@@ -475,6 +482,9 @@ class MonteCarloJobExecutor:
                 job.finished_shots = entry["shots"]
                 job.duration = entry["duration"]
                 job.min_time = 0 if "min_time" not in entry else entry["min_time"]
+                job.finished_tasks = (
+                    0 if "finished_tasks" not in entry else entry["finished_tasks"]
+                )
 
     def update_file(self, filename: str) -> None:
         with portalocker.Lock(
@@ -512,5 +522,6 @@ class MonteCarloJobExecutor:
                 entry["shots"] = job.finished_shots
                 entry["duration"] = job.duration
                 entry["min_time"] = job.min_time
+                entry["finished_tasks"] = job.finished_tasks
             json.dump(persist, f, indent=2)
             f.truncate()
