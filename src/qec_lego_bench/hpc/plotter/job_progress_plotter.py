@@ -13,6 +13,8 @@ class JobProgressPlotter:
         default_factory=lambda: display.display("", display_id=True)
     )
     fig: Figure = field(default_factory=closed_figure)
+    sort_by_name: bool = False
+    finished_job_sort_by_name: bool = True  # otherwise sort by duration
 
     # to make sure the figure is large enough and the text is readable...
     min_rows: int = 30
@@ -93,24 +95,41 @@ class JobProgressPlotter:
                 finished_jobs.append(row)
         while len(pending_jobs) + len(finished_jobs) < self.min_rows:
             finished_jobs.append([MonteCarloJob()] + ["-"] * (len(column_headers)))
-        pending_jobs.sort(key=lambda row: -cast(MonteCarloJob, row[0]).duration)
-        finished_jobs.sort(key=lambda row: -cast(MonteCarloJob, row[0]).duration)
+        # add colors to the jobs
+        orange = plt.cm.Oranges(0.1)  # type: ignore
+        red = plt.cm.Reds(0.5)  # type: ignore
+        white = "#FFFFFF"
+        colored_pending_jobs = [(orange, row) for row in pending_jobs]
+        colored_panic_jobs = [(red, row) for row in panic_jobs]
+        colored_finished_jobs = [(white, row) for row in finished_jobs]
+        if self.sort_by_name:
+            colored_jobs = (
+                colored_pending_jobs + colored_panic_jobs + colored_finished_jobs
+            )
+            colored_jobs.sort(key=lambda e: e[1][1])
+        else:
+            colored_pending_jobs.sort(
+                key=lambda e: -cast(MonteCarloJob, e[1][0]).duration
+            )
+            colored_finished_jobs.sort(
+                key=(
+                    (lambda e: e[1][1])
+                    if self.finished_job_sort_by_name
+                    else (lambda e: -cast(MonteCarloJob, e[1][0]).duration)
+                )
+            )
+            colored_jobs = (
+                colored_pending_jobs + colored_panic_jobs + colored_finished_jobs
+            )
         cell_text = []
         row_headers = []
-        for row in pending_jobs + panic_jobs + finished_jobs:
+        for color, row in colored_jobs:
             job = cast(MonteCarloJob, row[0])
             row_headers.append(job.hash[:6])
             cell_text.append([str(e) for e in row[1:]])
         if len(cell_text) == 0:
             return
-        rcolors = []
-        orange = plt.cm.Oranges(0.1)  # type: ignore
-        red = plt.cm.Reds(0.5)  # type: ignore
-        for row in pending_jobs:
-            rcolors.append(orange)
-        for row in panic_jobs:
-            rcolors.append(red)
-        rcolors.extend(["#FFFFFF"] * len(finished_jobs))
+        rcolors = [e[0] for e in colored_jobs]
         the_table = ax.table(
             cellText=cell_text,
             rowLabels=row_headers,
