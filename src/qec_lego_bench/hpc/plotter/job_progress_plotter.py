@@ -1,10 +1,8 @@
 from ..monte_carlo import *
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 from IPython import display
 from typing import cast
 from dataclasses import field
-from .logical_error_rate_plotter import closed_figure
+import pandas as pd
 
 
 @dataclass
@@ -12,23 +10,18 @@ class JobProgressPlotter:
     hdisplay: display.DisplayHandle = field(
         default_factory=lambda: display.display("", display_id=True)
     )
-    fig: Figure = field(default_factory=closed_figure)
     sort_by_name: bool = False
     finished_job_sort_by_name: bool = True  # otherwise sort by duration
-
-    # to make sure the figure is large enough and the text is readable...
-    min_rows: int = 30
 
     def __call__(
         self, executor: MonteCarloJobExecutor, show_logical_error: bool = True
     ):
-        fig = self.fig
-        ax = fig.gca()
-        ax.clear()
         pending_jobs = []
         finished_jobs = []
         panic_jobs = []
         column_headers = [
+            "Status",
+            "JobKey",
             "Job",
             "Finished",
             "Pending",
@@ -93,54 +86,53 @@ class JobProgressPlotter:
                 pending_jobs.append(row)
             else:
                 finished_jobs.append(row)
-        while len(pending_jobs) + len(finished_jobs) < self.min_rows:
-            finished_jobs.append([MonteCarloJob()] + ["-"] * (len(column_headers)))
-        # add colors to the jobs
-        orange = plt.cm.Oranges(0.1)  # type: ignore
-        red = plt.cm.Reds(0.5)  # type: ignore
-        white = "#FFFFFF"
-        colored_pending_jobs = [(orange, row) for row in pending_jobs]
-        colored_panic_jobs = [(red, row) for row in panic_jobs]
-        colored_finished_jobs = [(white, row) for row in finished_jobs]
+        # add status to the jobs
+        pending_jobs = [["pending"] + row for row in pending_jobs]
+        panic_jobs = [["panicked"] + row for row in panic_jobs]
+        finished_jobs = [["finished"] + row for row in finished_jobs]
         if self.sort_by_name:
-            colored_jobs = (
-                colored_pending_jobs + colored_panic_jobs + colored_finished_jobs
-            )
-            colored_jobs.sort(key=lambda e: e[1][1])
+            jobs = pending_jobs + panic_jobs + finished_jobs
+            jobs.sort(key=lambda e: e[2])
         else:
-            colored_pending_jobs.sort(
-                key=lambda e: -cast(MonteCarloJob, e[1][0]).duration
-            )
-            colored_finished_jobs.sort(
+            pending_jobs.sort(key=lambda e: -cast(MonteCarloJob, e[1]).duration)
+            finished_jobs.sort(
                 key=(
-                    (lambda e: e[1][1])
+                    (lambda e: e[2])
                     if self.finished_job_sort_by_name
-                    else (lambda e: -cast(MonteCarloJob, e[1][0]).duration)
+                    else (lambda e: -cast(MonteCarloJob, e[1]).duration)
                 )
             )
-            colored_jobs = (
-                colored_pending_jobs + colored_panic_jobs + colored_finished_jobs
-            )
-        cell_text = []
-        row_headers = []
-        for color, row in colored_jobs:
-            job = cast(MonteCarloJob, row[0])
-            row_headers.append(job.hash[:6])
-            cell_text.append([str(e) for e in row[1:]])
-        if len(cell_text) == 0:
+            jobs = pending_jobs + panic_jobs + finished_jobs
+        if len(jobs) == 0:
             return
-        rcolors = [e[0] for e in colored_jobs]
-        the_table = ax.table(
-            cellText=cell_text,
-            rowLabels=row_headers,
-            rowColours=rcolors,
-            rowLoc="right",
-            # colColours=ccolors,
-            colLabels=column_headers,
-            loc="center",
+        data = {header: [] for header in column_headers}
+        for row in jobs:
+            job = cast(MonteCarloJob, row[1])
+            text_row = [row[0], job.hash[:6]] + [str(e) for e in row[2:]]
+            assert len(text_row) == len(column_headers)
+            for header, element in zip(column_headers, text_row):
+                data[header].append(element)
+
+        # do not hide any rows or columns
+        original_max_rows = pd.get_option("display.max_rows")
+        original_max_columns = pd.get_option("display.max_columns")
+        original_max_colwidth = pd.get_option("display.max_colwidth")
+        pd.set_option("display.max_columns", None)
+        pd.set_option("display.max_rows", None)
+        pd.set_option("display.max_colwidth", None)
+
+        df = pd.DataFrame(data)
+        dfStyler = df.style.set_properties(
+            subset=["Status", "Job"], **{"text-align": "left"}
         )
-        the_table.auto_set_column_width(list(range(len(row_headers))))
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-        ax.set_frame_on(False)
-        self.hdisplay.update(fig)
+        dfStyler.set_table_styles(
+            [dict(selector="th", props=[("text-align", "center")])]
+        )
+        self.hdisplay.update(dfStyler)
+        del dfStyler
+        del df
+
+        # recover max rows and columns
+        pd.set_option("display.max_columns", original_max_columns)
+        pd.set_option("display.max_rows", original_max_rows)
+        pd.set_option("display.max_colwidth", original_max_colwidth)
