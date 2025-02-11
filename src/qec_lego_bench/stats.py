@@ -2,6 +2,7 @@ import sinter
 import numpy as np
 from uncertainties import ufloat
 import math
+from typing import Any, Optional
 
 
 def precision_to_errors(precision: float) -> int:
@@ -11,8 +12,13 @@ def precision_to_errors(precision: float) -> int:
 
 class Stats:
 
-    def __init__(self, stats: sinter.TaskStats | sinter.AnonTaskStats):
+    def __init__(
+        self,
+        stats: sinter.TaskStats | sinter.AnonTaskStats,
+        panic_cases: Optional[list[Any]] = None,
+    ):
         self.stats = stats
+        self.panic_cases: Optional[list[Any]] = panic_cases
 
     @property
     def errors(self) -> int:
@@ -71,9 +77,12 @@ class Stats:
         return ufloat(self.failure_rate_value, self.failure_rate_uncertainty)
 
     def __str__(self) -> str:
-        if self.samples == 0:
-            return "Stats{ 0/0 }"
-        return f"Stats{{ pL = {self.str_pL()}{self.str_speed(', speed=')} }}"
+        content = "0/0"
+        if self.samples != 0:
+            content = f"Stats{{ pL = {self.str_pL()}{self.str_speed(', speed=')}"
+        if self.panic_cases is not None:
+            content += f", panicked: {len(self.panic_cases)}"
+        return "Stats{ " + content + " }"
 
     def str_pL(self) -> str:
         return f"{self.failed}/{self.samples}= {self.failure_rate:.1uS}"
@@ -82,3 +91,9 @@ class Stats:
         if self.duration != 0:
             return f"{prefix}{self.average_duration:.2e}s/S"
         return ""
+
+    def report_panic(self, panic_case: Any):
+        """Report a panic, the panic still counts towards the shots but just have randomized correction"""
+        if self.panic_cases is None:
+            self.panic_cases = []
+        self.panic_cases.append(panic_case)

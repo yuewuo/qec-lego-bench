@@ -68,9 +68,6 @@ class Job:
     def kwargs(self) -> dict:
         return self._params.kwargs
 
-    def __getitem__(self, key: str) -> Any:
-        return self.kwargs[key]
-
     @property
     def hash(self) -> str:
         return self._params.hash
@@ -95,6 +92,8 @@ class JobStore:
     ) -> None:
         assert callable(func)
         self.func = func
+        for job in jobs:
+            assert isinstance(job, Job)
         self.jobs: dict[str, Job] = {job.hash: job for job in jobs}
         if len(self.jobs) != jobs:
             # report which jobs have conflicting hash

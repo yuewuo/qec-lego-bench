@@ -51,6 +51,7 @@ class PanicStore:
             persist = hjson.load(f)
             for hash, value in persist.items():
                 panic = JobPanic.from_dict(value)
+                assert panic.hash == hash, "hash value mismatch"
                 self.store[panic.hash] = panic
 
     def update_file(self):
@@ -91,6 +92,6 @@ class JobPanic:
     def hash(self):
         return self.parameters.hash
 
-    def add_panic(self, panic: str) -> "JobPanic":
-        self.panics.append(panic)
+    def add_info(self, panic_info: str) -> "JobPanic":
+        self.panics.append(panic_info)
         return self

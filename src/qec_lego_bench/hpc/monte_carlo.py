@@ -13,7 +13,7 @@ from typing import (
     Iterable,
     ParamSpec,
 )
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json
 from distributed import (
     Future,
@@ -35,6 +35,7 @@ import os
 from .job_store import JobParameters
 from .panic_store import PanicStore, JobPanic
 import traceback
+import multiprocessing
 
 
 def hex_hash(value: Any) -> str:
@@ -59,18 +60,44 @@ Result = TypeVar("Result", bound=MonteCarloResult)
 class LogicalErrorResult(MonteCarloResult):
     errors: int = 0
     discards: int = 0
+    panic_cases: Optional[list[str]] = None
+
+    @property
+    def panics(self) -> int:
+        if self.panic_cases is None:
+            return 0
+        return len(self.panic_cases)
 
     def __add__(self, other: "LogicalErrorResult") -> "LogicalErrorResult":
-        return LogicalErrorResult(self.errors + other.errors, self.discards + other.discards)  # type: ignore
+        panic_cases = None
+        if self.panic_cases is not None:
+            panic_cases = list(self.panic_cases)
+        if other.panic_cases is not None:
+            if panic_cases is None:
+                panic_cases = list(other.panic_cases)
+            else:
+                panic_cases.extend(other.panic_cases)
+        return LogicalErrorResult(
+            errors=self.errors + other.errors,
+            discards=self.discards + other.discards,
+            panic_cases=panic_cases,
+        )  # type: ignore
 
     def stats_of(self, job: "MonteCarloJob") -> Stats:
         return Stats(
-            sinter.AnonTaskStats(
+            stats=sinter.AnonTaskStats(
                 shots=job.shots,
                 errors=self.errors,
                 discards=self.discards,
                 seconds=job.duration,
-            )
+            ),
+            panic_cases=self.panic_cases,
+        )
+
+    @staticmethod
+    def from_stats(stats: Stats) -> "LogicalErrorResult":
+        return LogicalErrorResult(
+            errors=stats.errors, discards=stats.discards, panic_cases=stats.panic_cases
         )
 
 
@@ -211,6 +238,90 @@ def monitored_job(
     return MonitoredResult(result, shots, actual_shots, duration, panic_info=panic_info)
 
 
+class DefaultSlurmExtra:
+    @staticmethod
+    def scavenge() -> dict[str, Any]:
+        return dict(
+            walltime="1-00:00:00",
+            # using scavenge partition will help spawn scavenged jobs
+            # use with caution: dask does not seem to handle scavenge workers well,
+            # often throwing out `KilledWorker` exception; although added some
+            # logic to handle this case, it is not well tested
+            queue="scavenge",
+            job_extra_directives=["--requeue"],  # automatic requeue of the jobs
+        )
+
+    @staticmethod
+    def day() -> dict[str, Any]:
+        return dict(
+            walltime="1-00:00:00",
+            queue="day",
+        )
+
+    @staticmethod
+    def week() -> dict[str, Any]:
+        return dict(
+            walltime="7-00:00:00",
+            queue="week",
+        )
+
+
+@dataclass
+class SlurmClientConnector:
+    # (slurm_maximum_jobs // slurm_cores_per_node) should not exceed 200 (Yale HPC limit)
+    slurm_maximum_jobs: int = 200
+    slurm_cores_per_node: int = 10
+    slurm_mem_per_job: int = 4  # GB
+    slurm_extra: dict[str, str] = field(default_factory=DefaultSlurmExtra.scavenge)
+    local_maximum_jobs: int = field(default_factory=multiprocessing.cpu_count)
+    print_job_script: bool = True  # for easier debugging
+
+    use_adaptive_scaling: bool = False  # not well tested
+    slurm_minimum_jobs: int = 1  # only affect when `use_adaptive_scaling` is True
+
+    def __call__(self):
+        try:
+            from dask_jobqueue import SLURMCluster
+            from dask.distributed import Client
+
+            n_workers = self.slurm_maximum_jobs // self.slurm_cores_per_node
+            assert (
+                n_workers <= 200
+            ), "Yale HPC forbids submitting more than 200 jobs per hour"
+            slurm_job_folder = os.path.join(os.path.abspath(os.getcwd()), "slurm_job")
+            job_extra_directives = [
+                f'--out="{slurm_job_folder}/%j.out"',
+                f'--error="{slurm_job_folder}/%j.err"',
+            ]
+            slurm_extra = {**self.slurm_extra}
+            if "job_extra_directives" in slurm_extra:
+                job_extra_directives += slurm_extra["job_extra_directives"]
+                del slurm_extra["job_extra_directives"]
+            cluster = SLURMCluster(
+                cores=self.slurm_cores_per_node,
+                processes=self.slurm_cores_per_node,
+                memory=f"{self.slurm_mem_per_job * self.slurm_cores_per_node} GB",
+                job_extra_directives=job_extra_directives,
+                **slurm_extra,
+            )
+            if self.print_job_script:
+                print(cluster.job_script())
+            if not self.use_adaptive_scaling:
+                cluster.scale(self.slurm_maximum_jobs)
+            else:
+                cluster.adapt(
+                    minimum=self.slurm_minimum_jobs, maximum=self.slurm_maximum_jobs
+                )
+        except Exception as e:
+            print(e)
+            from dask.distributed import Client, LocalCluster
+
+            cluster = LocalCluster(n_workers=self.local_maximum_jobs)
+        print("cluster dashboard link:", cluster.dashboard_link)
+        client = Client(cluster)
+        return client
+
+
 class MonteCarloJobExecutor:
     def __init__(
         self,
@@ -228,6 +339,8 @@ class MonteCarloJobExecutor:
         config = config or MonteCarloExecutorConfig()
         self.config = config
         self.func = func
+        for job in jobs:
+            assert isinstance(job, MonteCarloJob)
         self.jobs: dict[str, MonteCarloJob] = {job.hash: job for job in jobs}
         self.pending_futures: list[Future] = []
         self.future_info: dict[Future, MonteCarloJob] = {}
@@ -305,22 +418,31 @@ class MonteCarloJobExecutor:
                     assert len(futures.done) + len(futures.not_done) == len(
                         self.pending_futures
                     ), "API error"
+                    self.pending_futures = list(futures.not_done)  # type: ignore
                     for done, job_result in as_completed(
-                        futures.done, with_results=True
+                        futures.done, with_results=True, raise_errors=False
                     ):
+                        if future.status == "error":
+                            # 2025.2.10: slurmstepd: error: *** JOB 15338504 ON r815u15n07 CANCELLED AT 2025-02-10T11:56:44 DUE TO PREEMPTION ***
+                            # The schedular thinks it is the job itself that causes the failure
+                            # but it is actually the slurm that kills the job in scavenge partition
+                            # try to catch this case and just retry the future instead of killing the schedular
+                            future.retry()
+                            self.pending_futures.append(future)
+                            continue
                         job_result = cast(MonitoredResult, job_result)
                         assert isinstance(done, Future)
                         job = self.future_info[done]
                         if job_result.panic_info is not None:
                             # job panics, record it
-                            self.panics.add_panic(
-                                JobPanic(
-                                    parameters=job.parameters,
-                                    latest=json.dumps(
-                                        dict(shots=job.shots, duration=job.duration)
-                                    ),
-                                ).add_panic(job_result.panic_info)
+                            job_panic = JobPanic(
+                                parameters=job.parameters,
+                                latest=json.dumps(
+                                    dict(shots=job.shots, duration=job.duration)
+                                ),
                             )
+                            job_panic.add_info(job_result.panic_info)
+                            self.panics.add_panic(job_panic)
                         else:
                             result = job_result.result
                             assert result is not None
@@ -338,7 +460,6 @@ class MonteCarloJobExecutor:
                                 job.min_time = min(job.min_time, job_result.duration)
                         del self.future_info[done]
                         client.cancel(done)
-                    self.pending_futures = list(futures.not_done)  # type: ignore
                 # get the next job to run
                 while True:
                     # make the development of the submitter easier by iteratively call them

@@ -31,7 +31,7 @@ class JobProgressPlotter:
             "Duration",
         ]
         if show_logical_error:
-            column_headers.extend(["Errors", "Discards", "Error Rate"])
+            column_headers.extend(["Errors", "Discards", "Panics", "Error Rate"])
         job_pending_futures_count = {job: 0 for job in executor}
         for future in executor.pending_futures:
             job = executor.future_info[future]
@@ -73,13 +73,14 @@ class JobProgressPlotter:
                     stats = job.result.stats_of(job)  # type: ignore
                     row.extend(
                         [
-                            stats.errors,
-                            stats.discards,
+                            job.result.errors,
+                            job.result.discards,
+                            job.result.panics,
                             f"{stats.failure_rate:.1uS}",
                         ]
                     )
                 else:
-                    row.extend(["-", "-", "-"])
+                    row.extend(["-", "-", "-", "-"])
             if job.parameters in executor.panics:
                 panic_jobs.append(row)
             elif job.pending_shots > 0:

@@ -53,7 +53,7 @@ def logical_error_rate(
         and progress_callback is None
         and save_resume_filepath is None
     ):
-        # run single thread instead of sinter.collect
+        # run single thread instead of sinter.collect, so that the panic information can be collected
         single_result = sample_decode(
             circuit_obj=task.circuit,
             circuit_path=None,
@@ -64,6 +64,10 @@ def logical_error_rate(
             custom_decoders={str(decoder): decoder_instance},
         )
         stats = Stats(single_result)
+        if hasattr(decoder_instance, "panic_cases"):
+            if len(decoder_instance.panic_cases) > 0:
+                for panic_case in decoder_instance.panic_cases:
+                    stats.report_panic(panic_case)
         if not no_print:
             print(stats)
         return stats
