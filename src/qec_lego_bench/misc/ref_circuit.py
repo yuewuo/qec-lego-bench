@@ -12,7 +12,7 @@ heralded errors more easily.
 
 This is done by adding a custom class `ReferenceRec` in place of the normal `GateTarget`
 object returned by the `stim.target_rec(lookback)` function.
-In constrast to the negative integer `lookback` parameters, the `bias` integer is a non-negative
+In contrast to the negative integer `lookback` parameters, the `bias` integer is a non-negative
 index bias over the `RefInstruction` that generates the measurements.
 In this way, we are free to manipulate the instructions without worrying that the measurements
 indices are messed up.
@@ -20,7 +20,11 @@ The `RefCircuit` object will automatically calculate the new relative indices so
 works properly, and also it will generate a mapping between indices of the old circuit and new circuit.
 
 ```python
-
+circuit = stim.Circuit(...)
+ref_circuit = RefCircuit(circuit)
+print(ref_circuit)  # print the circuit in absolute indices
+circuit_2 = ref_circuit.to_circuit()  # convert the ref_circuit back to stim.Circuit
+print(circuit_2)  # print the circuit in relative indices
 ```
 """
 
