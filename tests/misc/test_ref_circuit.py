@@ -24,7 +24,7 @@ OBSERVABLE_INCLUDE(0) rec[-1]\
     print("######### original circuit #########")
     print(circuit)
     assert str(circuit) == circuit_str
-    ref_circuit = RefCircuit(circuit)
+    ref_circuit = RefCircuit.of(circuit)
     print("######### absolute indexed circuit #########")
     print(ref_circuit)
     assert (
@@ -67,13 +67,29 @@ OBSERVABLE_INCLUDE(0) abs[5]\
     assert [detector.num_measurements for detector in detectors] == [0] * 5
     assert [len(detector.targets) for detector in detectors] == [1, 1, 1, 3, 3]
     assert [detector.index(ref_circuit) for detector in detectors] == [7, 8, 10, 12, 13]
-    assert [
-        ref_circuit.detector_to_index[id(detector)] for detector in detectors
-    ] == list(range(5))
+    assert [ref_circuit.detector_to_index[detector] for detector in detectors] == list(
+        range(5)
+    )
+    assert ref_circuit.rec_to_detectors[recs[0]] == (detectors[0], detectors[3])
+    assert ref_circuit.rec_to_detectors[recs[1]] == (detectors[1], detectors[4])
+    assert ref_circuit.rec_to_detectors[recs[2]] == (detectors[2],)
+    assert ref_circuit.rec_to_detectors[recs[3]] == (detectors[3],)
+    assert ref_circuit.rec_to_detectors[recs[4]] == (detectors[3], detectors[4])
+    assert ref_circuit.rec_to_detectors[recs[5]] == (detectors[4],)
     # then the instructions
     assert [
-        ref_circuit.instruction_to_index[id(instruction)] for instruction in ref_circuit
+        ref_circuit.instruction_to_index[instruction] for instruction in ref_circuit
     ] == list(range(15))
+    # finally play with the dem
+    original_dem = circuit.detector_error_model(
+        approximate_disjoint_errors=True, flatten_loops=True
+    ).flattened()
+    print("######### original dem #########")
+    print(original_dem)
+    print("######### new dem #########")
+    new_dem = ref_circuit.ref_dem.dem()
+    print(new_dem)
+    print(new_dem == original_dem)
 
 
 def test_ref_circuit_heralded_erase_example():
@@ -119,7 +135,7 @@ DETECTOR rec[-5]\
     print("######### original circuit #########")
     print(circuit)
     assert str(circuit) == circuit_str
-    ref_circuit = RefCircuit(circuit)
+    ref_circuit = RefCircuit.of(circuit)
     print("######### absolute indexed circuit #########")
     print(ref_circuit)
     assert (
@@ -186,7 +202,7 @@ DETECTOR rec[-4]\
     print("######### original circuit #########")
     print(circuit)
     assert str(circuit) == circuit_str
-    ref_circuit = RefCircuit(circuit)
+    ref_circuit = RefCircuit.of(circuit)
     print("######### absolute indexed circuit #########")
     print(ref_circuit)
     assert (
@@ -220,8 +236,8 @@ def test_adding_circuit():
     circuit = circuit_1 + circuit_2
     print(circuit)
     assert str(circuit) == "MXX 0 1\nMZZ 2 3"
-    ref_circuit_1 = RefCircuit(circuit_1)
-    ref_circuit_2 = RefCircuit(circuit_2)
+    ref_circuit_1 = RefCircuit.of(circuit_1)
+    ref_circuit_2 = RefCircuit.of(circuit_2)
     ref_circuit = ref_circuit_1 + ref_circuit_2
     print(ref_circuit)
     assert str(ref_circuit) == "MXX 0 1\nMZZ 2 3"
