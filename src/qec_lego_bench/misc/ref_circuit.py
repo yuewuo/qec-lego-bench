@@ -30,7 +30,7 @@ print(circuit_2)  # print the circuit in relative indices
 
 import stim
 from dataclasses import dataclass, field
-from typing import Iterator, Iterable, TypeAlias
+from typing import Iterator, Iterable, TypeAlias, Collection
 import functools
 from frozendict import frozendict
 from frozenlist import FrozenList
@@ -256,8 +256,8 @@ class RefCircuit:
         return tuple(stim_instructions)
 
     @functools.cached_property
-    def ref_dem(self) -> "RefDemDetector":
-        return RefDemDetector.of(self)
+    def ref_dem(self) -> "RefDetectorErrorModel":
+        return RefDetectorErrorModel.of(self)
 
     def circuit(self) -> stim.Circuit:
         circuit = stim.Circuit()
@@ -370,6 +370,71 @@ class RefCircuit:
             new_instructions.append(new_instruction)
         return RefCircuit.of(new_instructions)
 
+    def remove_noise_channels(
+        self, keeping: Collection[RefInstruction]
+    ) -> "RefCircuit":
+        """
+        Remove all the noise channels and their detectors from the circuit
+        """
+        new_instructions = list(self)
+        deleting_indices: list[int] = []
+        for index, instruction in enumerate(self.instructions):
+            if not is_noise_channel_instruction(instruction):
+                continue
+            if instruction not in keeping:
+                deleting_indices.append(index)
+            # if the noise has measurement result, then they are heralded errors
+            # remove the detectors associated with the heralded errors as well
+            for ref_rec in instruction.recs:
+                for detector in self.rec_to_detectors[ref_rec]:
+                    assert (
+                        len(detector.targets) == 1
+                    ), "bug: detector of a heralded error has multiple targets"
+                    if detector not in keeping:
+                        deleting_indices.append(self.instruction_to_index[detector])
+        assert len(set(deleting_indices)) == len(deleting_indices), "bug: duplicate"
+        for index in sorted(deleting_indices, reverse=True):
+            del new_instructions[index]
+        return RefCircuit.of(new_instructions)
+
+
+NOISE_CHANNEL_INSTRUCTION_WARNING_KEYWORDS: tuple[str, ...] = (
+    "ERROR",
+    "DEPOLARIZE",
+    "HERALDED",
+    "PAULI_CHANNEL",
+)
+
+# the available noise channels as of stim v1.15.0-dev
+NOISE_CHANNEL_INSTRUCTION_NAMES: frozenset[str] = frozenset(
+    {
+        "CORRELATED_ERROR",
+        "DEPOLARIZE1",
+        "DEPOLARIZE2",
+        "E",
+        "ELSE_CORRELATED_ERROR",
+        "HERALDED_ERASE",
+        "HERALDED_PAULI_CHANNEL_1",
+        "PAULI_CHANNEL_1",
+        "PAULI_CHANNEL_2",
+        "X_ERROR",
+        "Y_ERROR",
+        "Z_ERROR",
+    }
+)
+
+
+def is_noise_channel_instruction(
+    instruction: RefInstruction | stim.CircuitInstruction,
+) -> bool:
+    name: str = instruction.name
+    if name in NOISE_CHANNEL_INSTRUCTION_NAMES:
+        return True
+    for keyword in NOISE_CHANNEL_INSTRUCTION_WARNING_KEYWORDS:
+        if keyword in name:
+            print(f"[warning] found keyword {keyword} in unknown instruction: {name}")
+    return False
+
 
 @dataclass(frozen=True)
 class RefDemInstruction:
@@ -379,14 +444,14 @@ class RefDemInstruction:
 
 
 @dataclass(frozen=True)
-class RefDemDetector:
+class RefDetectorErrorModel:
     instructions: tuple[RefDemInstruction, ...]
     ref_circuit: RefCircuit
 
     @staticmethod
     def of(
         ref_circuit: RefCircuit, dem: stim.DetectorErrorModel | None = None
-    ) -> "RefDemDetector":
+    ) -> "RefDetectorErrorModel":
         if dem is None:
             dem = ref_circuit.circuit().detector_error_model(
                 approximate_disjoint_errors=True, flatten_loops=True
@@ -406,7 +471,9 @@ class RefDemDetector:
                 targets=tuple(ref_targets),
             )
             instructions.append(ref_instruction)
-        return RefDemDetector(instructions=tuple(instructions), ref_circuit=ref_circuit)
+        return RefDetectorErrorModel(
+            instructions=tuple(instructions), ref_circuit=ref_circuit
+        )
 
     def dem(self, ref_circuit: RefCircuit | None = None) -> stim.DetectorErrorModel:
         if ref_circuit is None:
@@ -430,3 +497,23 @@ class RefDemDetector:
                 )
             )
         return dem
+
+    @functools.cached_property
+    def hyperedges(self) -> frozendict[frozenset[int], float]:
+        hyperedges: dict[frozenset[int], float] = {}
+        for instruction in self.instructions:
+            if instruction.type == "error":
+                assert (
+                    len(instruction.args) == 1
+                ), "error instruction must have 1 parameter of type float"
+                error_rate = instruction.args[0]
+                hyperedge = frozenset(
+                    self.ref_circuit.detector_to_index[target]
+                    for target in instruction.targets
+                    if isinstance(target, RefDetector)
+                )
+                if hyperedge in hyperedges:
+                    hyperedges[hyperedge] = max(hyperedges[hyperedge], error_rate)
+                else:
+                    hyperedges[hyperedge] = error_rate
+        return frozendict(hyperedges)

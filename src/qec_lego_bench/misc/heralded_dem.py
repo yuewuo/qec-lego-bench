@@ -13,9 +13,16 @@ To help user, we provide a function that automatically adds such detections.
 """
 
 import stim
-from .ref_circuit import RefCircuit, RefInstruction, RefRec
+from .ref_circuit import (
+    RefCircuit,
+    RefInstruction,
+    RefRec,
+    RefDetector,
+    RefDetectorErrorModel,
+)
 import functools
 from dataclasses import dataclass
+from frozendict import frozendict
 
 
 DEM_MIN_PROBABILITY = 1e-15  # below this value, DEM starts to ignore the error rate
@@ -99,7 +106,7 @@ class HeraldedDetectorErrorModel:
         )
 
     @functools.cached_property
-    def heralded_detectors(self) -> tuple[RefInstruction | None, ...]:
+    def heralded_detectors(self) -> tuple[RefDetector | None, ...]:
         heralded_measurements = frozenset(self.heralded_measurements)
         return tuple(
             detector
@@ -121,31 +128,19 @@ class HeraldedDetectorErrorModel:
         #     HERALDED_PAULI_CHANNEL_1 -> PAULI_CHANNEL_1(...)
         for instruction in self.heralded_instructions:
             instruction_index = self.ref_circuit.instruction_to_index[instruction]
-            if instruction.name == "HERALDED_ERASE":
-                heralded_probability = instruction.gate_args[0]
-                if heralded_probability == 0:
-                    deleting_indices.append(instruction_index)
-                    continue
-                new_instructions[instruction_index] = RefInstruction(
-                    name="DEPOLARIZE1",
-                    targets=instruction.targets,
-                    gate_args=(dem_probability(self.false_positive_rate),),
-                )
-            elif instruction.name == "HERALDED_PAULI_CHANNEL_1":
-                _pI, pX, pY, pZ = instruction.gate_args
-                p_sum = pX + pY + pZ
-                if p_sum == 0:
-                    deleting_indices.append(instruction_index)
-                    continue
-                new_instructions[instruction_index] = RefInstruction(
-                    name="PAULI_CHANNEL_1",
-                    targets=instruction.targets,
-                    gate_args=(
-                        dem_probability((pX / p_sum) * self.false_positive_rate),
-                        dem_probability((pY / p_sum) * self.false_positive_rate),
-                        dem_probability((pZ / p_sum) * self.false_positive_rate),
-                    ),
-                )
+            noise_instruction = heralded_instruction_to_noise_instruction(instruction)
+            if noise_instruction is None:
+                deleting_indices.append(instruction_index)
+                continue
+            tiny_noise_instruction = RefInstruction(
+                name=noise_instruction.name,
+                targets=noise_instruction.targets,
+                gate_args=tuple(
+                    dem_probability(p * self.false_positive_rate)
+                    for p in noise_instruction.gate_args
+                ),
+            )
+            new_instructions[instruction_index] = tiny_noise_instruction
         # then delete detectors of the heralded errors
         for detector in self.heralded_detectors:
             if detector is not None:
@@ -155,12 +150,83 @@ class HeraldedDetectorErrorModel:
             del new_instructions[index]
         return RefCircuit.of(new_instructions)
 
-    def skeleton_dem(self) -> stim.DetectorErrorModel:
+    @functools.cached_property
+    def skeleton_dem(self) -> RefDetectorErrorModel:
         """
         construct a dem whose detector id corresponds to the detectors of the original circuit
         instead of the skeleton circuit
         """
-        return self.skeleton_circuit.ref_dem.dem(self.ref_circuit)
+        ref_dem = self.skeleton_circuit.ref_dem
+        # let the dem refer to self.ref_circuit instead
+        return RefDetectorErrorModel(
+            instructions=ref_dem.instructions, ref_circuit=self.ref_circuit
+        )
+
+    @functools.cached_property
+    def heralded_dems(
+        self,
+    ) -> frozendict[RefDetector, RefDetectorErrorModel]:
+        skeleton_hyperedges = self.skeleton_dem.hyperedges
+        ref_dems: dict[RefDetector, RefDetectorErrorModel] = {}
+        for detector in self.heralded_detectors:
+            if detector is None:
+                continue
+            ref_rec = detector.targets[0]
+            heralded_instruction = ref_rec.instruction
+            all_noise_instruction = heralded_instruction_to_noise_instruction(
+                heralded_instruction
+            )
+            if all_noise_instruction is None:
+                continue
+            assert isinstance(ref_rec, RefRec)
+            # remove all the noise channels except the heralded error
+            circuit_no_noise = self.ref_circuit.remove_noise_channels(
+                keeping={ref_rec.instruction}
+            )
+            new_circuit_instructions = list(circuit_no_noise)
+            # change the heralded error to the noise channel when it happens
+            assert (
+                len(all_noise_instruction.targets)
+                == heralded_instruction.num_measurements
+            ), "the following code assumes target has a heralding measurement"
+            new_circuit_instructions[
+                circuit_no_noise.instruction_to_index[heralded_instruction]
+            ] = RefInstruction(
+                name=all_noise_instruction.name,
+                targets=(all_noise_instruction.targets[ref_rec.bias],),
+                gate_args=all_noise_instruction.gate_args,
+            )
+            new_circuit = RefCircuit.of(new_circuit_instructions)
+            heralded_dem = RefDetectorErrorModel(
+                instructions=new_circuit.ref_dem.instructions,
+                ref_circuit=self.ref_circuit,
+            )
+            if not heralded_dem.hyperedges:
+                # if there is no hyperedge, we don't need this detector at all
+                continue
+            for hyperedge in heralded_dem.hyperedges:
+                assert hyperedge in skeleton_hyperedges, (
+                    "bug: the skeleton graph doesn't have the hyperedge, "
+                    + "this might causes issue when constructing decoders"
+                )
+            ref_dems[detector] = heralded_dem
+
+        return frozendict(ref_dems)
+
+    def __str__(self) -> str:
+        result = "HeraldedDetectorErrorModel:"
+        result += "\n    skeleton hypergraph:"
+        for hyperedge, p in self.skeleton_dem.hyperedges.items():
+            result += (
+                f"\n        {', '.join([f'D{v}' for v in sorted(hyperedge)])}: {p}"
+            )
+        for detector, ref_dem in self.heralded_dems.items():
+            result += f"\n    heralded hypergraph on D{self.ref_circuit.detector_to_index[detector]}:"
+            for hyperedge, p in ref_dem.hyperedges.items():
+                result += (
+                    f"\n        {', '.join([f'D{v}' for v in sorted(hyperedge)])}: {p}"
+                )
+        return result
 
 
 def add_herald_detectors(circuit: stim.Circuit) -> stim.Circuit:
@@ -195,3 +261,28 @@ def is_heralded_error(instruction: RefInstruction) -> bool:
             f"Instruction {instruction.name} has 'HERALDED' in its name but is not implemented yet."
         )
     return False
+
+
+def heralded_instruction_to_noise_instruction(
+    instruction: RefInstruction,
+) -> RefInstruction | None:
+    if instruction.name == "HERALDED_ERASE":
+        heralded_probability = instruction.gate_args[0]
+        if heralded_probability == 0:
+            return None
+        return RefInstruction(
+            name="DEPOLARIZE1",
+            targets=instruction.targets,
+            gate_args=(0.75,),
+        )
+    elif instruction.name == "HERALDED_PAULI_CHANNEL_1":
+        _pI, pX, pY, pZ = instruction.gate_args
+        p_sum = pX + pY + pZ
+        if p_sum == 0:
+            return None
+        return RefInstruction(
+            name="PAULI_CHANNEL_1",
+            targets=instruction.targets,
+            gate_args=(pX / p_sum, pY / p_sum, pZ / p_sum),
+        )
+    return None
