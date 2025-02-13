@@ -19,10 +19,17 @@ class HeraldedDetectorErrorModel:
         # iterate over all heralded errors in the circuit and construct the
         # mapping from (RefInstruction, bias) to the heralded detector
         heralded_errors: dict[tuple[int, int], int] = {}
-        for instruction in self.circuit:
+        for instruction in enumerate(self.circuit):
             if instruction.name == "HERALDED_ERASE":
-                for target in instruction.targets:
+                for target in enumerate(instruction.targets):
                     assert isinstance(target, stim.GateTarget)
+            elif instruction.name == "HERALDED_PAULI_CHANNEL_1":
+                # TODO: implement
+                ...
+            elif "HERALDED" in instruction.name:
+                raise NotImplementedError(
+                    f"Instruction {instruction.name} has 'HERALDED' in its name but is not implemented yet."
+                )
 
 
 def add_heralded_detectors(circuit: stim.Circuit) -> stim.Circuit:
