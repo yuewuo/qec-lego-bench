@@ -24,11 +24,11 @@ OBSERVABLE_INCLUDE(0) rec[-1]\
     print("######### original circuit #########")
     print(circuit)
     assert str(circuit) == circuit_str
-    circuit_abs = RefCircuit(circuit)
+    ref_circuit = RefCircuit(circuit)
     print("######### absolute indexed circuit #########")
-    print(circuit_abs)
+    print(ref_circuit)
     assert (
-        str(circuit_abs)
+        str(ref_circuit)
         == """\
 R 0 1 2 3 4
 TICK
@@ -47,11 +47,33 @@ DETECTOR(3, 1) abs[5] abs[4] abs[1]
 OBSERVABLE_INCLUDE(0) abs[5]\
 """
     )
-    circuit_2 = circuit_abs.to_circuit()
+    circuit_2 = ref_circuit.circuit()
     print("######### new circuit #########")
     print(circuit_2)
     assert isinstance(circuit_2, stim.Circuit)
     assert str(circuit_2) == circuit_str
+
+    # now let's play with some of the functionalities
+    # first, the measurement recording array
+    recs = ref_circuit.recs
+    assert len(recs) == 6
+    assert [rec.instruction.index(ref_circuit) for rec in recs] == [6, 6, 9, 11, 11, 11]
+    assert [rec.abs_index(ref_circuit) for rec in recs] == [0, 1, 2, 3, 4, 5]
+    assert recs[0].rel_index(ref_circuit, ref_circuit[7]) == -2
+    assert recs[1].rel_index(ref_circuit, ref_circuit[7]) == -1
+    # second, the detectors
+    detectors = ref_circuit.detectors
+    assert len(detectors) == 5
+    assert [detector.num_measurements for detector in detectors] == [0] * 5
+    assert [len(detector.targets) for detector in detectors] == [1, 1, 1, 3, 3]
+    assert [detector.index(ref_circuit) for detector in detectors] == [7, 8, 10, 12, 13]
+    assert [
+        ref_circuit.detector_to_index[id(detector)] for detector in detectors
+    ] == list(range(5))
+    # then the instructions
+    assert [
+        ref_circuit.instruction_to_index[id(instruction)] for instruction in ref_circuit
+    ] == list(range(15))
 
 
 def test_ref_circuit_heralded_erase_example():
@@ -97,11 +119,11 @@ DETECTOR rec[-5]\
     print("######### original circuit #########")
     print(circuit)
     assert str(circuit) == circuit_str
-    circuit_abs = RefCircuit(circuit)
+    ref_circuit = RefCircuit(circuit)
     print("######### absolute indexed circuit #########")
-    print(circuit_abs)
+    print(ref_circuit)
     assert (
-        str(circuit_abs)
+        str(ref_circuit)
         == """\
 HERALDED_ERASE(0.01) 0
 DETECTOR abs[0]
@@ -117,7 +139,7 @@ DETECTOR abs[5]
 DETECTOR abs[4]\
 """
     )
-    circuit_2 = circuit_abs.to_circuit()
+    circuit_2 = ref_circuit.circuit()
     print("######### new circuit #########")
     print(circuit_2)
     assert isinstance(circuit_2, stim.Circuit)
@@ -164,11 +186,11 @@ DETECTOR rec[-4]\
     print("######### original circuit #########")
     print(circuit)
     assert str(circuit) == circuit_str
-    circuit_abs = RefCircuit(circuit)
+    ref_circuit = RefCircuit(circuit)
     print("######### absolute indexed circuit #########")
-    print(circuit_abs)
+    print(ref_circuit)
     assert (
-        str(circuit_abs)
+        str(ref_circuit)
         == """\
 HERALDED_PAULI_CHANNEL_1(0, 0, 0, 0.1) 0
 DETECTOR abs[0]
@@ -185,7 +207,7 @@ DETECTOR abs[5]
 DETECTOR abs[4]\
 """
     )
-    circuit_2 = circuit_abs.to_circuit()
+    circuit_2 = ref_circuit.circuit()
     print("######### new circuit #########")
     print(circuit_2)
     assert isinstance(circuit_2, stim.Circuit)

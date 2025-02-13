@@ -31,6 +31,9 @@ print(circuit_2)  # print the circuit in relative indices
 import stim
 from dataclasses import dataclass, field
 from typing import Iterator, Iterable
+import functools
+from frozendict import frozendict
+from frozenlist import FrozenList
 
 
 @dataclass(frozen=True)
@@ -42,6 +45,22 @@ class RefRec:
         if self.bias < 0:
             raise ValueError("The bias must be a non-negative integer.")
 
+    def abs_index(self, circuit: "RefCircuit") -> int:
+        return circuit.rec_to_index[id(self)]
+
+    def rel_index(self, circuit: "RefCircuit", instruction: "RefInstruction") -> int:
+        """get the relative rec index before executing the instruction"""
+        return (
+            circuit.rec_to_index[id(self)]
+            - circuit.instruction_to_rec_bias[id(instruction)]
+        )
+
+    def __eq__(self, other: "RefInstruction") -> bool:
+        return id(self) == id(other)  # avoiding value-based comparison
+
+    def __hash__(self) -> int:
+        return hash(id(self))
+
 
 @dataclass(frozen=True)
 class RefInstruction:
@@ -49,11 +68,20 @@ class RefInstruction:
     targets: tuple[stim.GateTarget | RefRec, ...]
     gate_args: tuple[float, ...]
     tag: str
-    rec: list[RefRec] = field(default_factory=list)
+    recs: FrozenList[RefRec] = field(default_factory=FrozenList)
 
     @property
     def num_measurements(self) -> int:
-        return len(self.rec)
+        return len(self.recs)
+
+    def index(self, circuit: "RefCircuit") -> int:
+        return circuit.instruction_to_index[id(self)]
+
+    def __eq__(self, other: "RefInstruction") -> bool:
+        return id(self) == id(other)  # avoiding value-based comparison
+
+    def __hash__(self) -> int:
+        return hash(id(self))
 
 
 @dataclass
@@ -63,27 +91,25 @@ class RefIterInfo:
     num_measurements: int
     instruction: RefInstruction
     stim_instruction: stim.CircuitInstruction
-    relative_targets: list[stim.GateTarget]
-    rel_to_abs: dict[int, tuple[int, int]]
 
 
 class RefCircuit:
     def __init__(self, circuit: stim.Circuit | Iterable[RefInstruction] | None = None):
         if circuit is None:
-            self.instructions: list[RefInstruction] = []
+            self.instructions: tuple[RefInstruction, ...] = tuple()
             return
         if not isinstance(circuit, stim.Circuit):
-            self.instructions = list(circuit)
+            self.instructions = tuple(circuit)
             self.sanity_check()
             return
-        self.instructions = []
-        rec: list[RefRec] = []
+        instructions: list[RefInstruction] = []
+        recs: list[RefRec] = []
         for instruction in circuit.flattened():
             # rewrite the gate target to absolute measurement indices
             abs_targets: list[stim.GateTarget | RefRec] = []
             for target in instruction.targets_copy():
                 if target.is_measurement_record_target:
-                    abs_targets.append(rec[target.value])
+                    abs_targets.append(recs[target.value])
                 else:
                     abs_targets.append(target)
             # construct the instruction
@@ -93,15 +119,17 @@ class RefCircuit:
                 gate_args=tuple(instruction.gate_args_copy()),
                 tag=instruction.tag,
             )
-            self.instructions.append(ref_instruction)
+            instructions.append(ref_instruction)
             # add the measurement to the measurement list
             for bias in range(instruction.num_measurements):
                 reference_rec = RefRec(
                     instruction=ref_instruction,
                     bias=bias,
                 )
-                ref_instruction.rec.append(reference_rec)
-                rec.append(reference_rec)
+                ref_instruction.recs.append(reference_rec)
+                recs.append(reference_rec)
+            ref_instruction.recs.freeze()  # do not allow further edit
+        self.instructions = tuple(instructions)
         self.sanity_check()
 
     def __repr__(self) -> str:
@@ -113,15 +141,25 @@ class RefCircuit:
     def __str__(self) -> str:
         # print the circuit in absolute indices; this helps writing test cases
         code_str = ""
-        for iter_info in self.iterate_over_instruction():
-            instruction_str = str(iter_info.stim_instruction)
+        for instruction, stim_instruction in zip(
+            self.instructions, self.stim_instructions
+        ):
+            rec_count: dict[RefRec, int] = {}
+            for ref_target in instruction.targets:
+                if isinstance(ref_target, RefRec):
+                    if ref_target in rec_count:
+                        rec_count[ref_target] += 1
+                    else:
+                        rec_count[ref_target] = 1
+            instruction_str = str(stim_instruction)
             # change all the relative indices to absolute indices
-            for relative_index, (abs_index, count) in iter_info.rel_to_abs.items():
+            for ref_rec, count in rec_count.items():
                 # this count checking is safe because "rec[..]" becomes "rec[..\C"
                 # in the tag parameter, and the character "]" cannot appear elsewhere
+                relative_index = ref_rec.rel_index(self, instruction)
                 assert instruction_str.count(f"rec[{relative_index}]") == count
                 instruction_str = instruction_str.replace(
-                    f"rec[{relative_index}]", f"abs[{abs_index}]"
+                    f"rec[{relative_index}]", f"abs[{ref_rec.abs_index(self)}]"
                 )
             if len(code_str) > 0:
                 code_str += "\n"
@@ -132,66 +170,89 @@ class RefCircuit:
         for instruction in self.instructions:
             yield instruction
 
-    def rec(self) -> list[RefRec]:
-        rec: list[RefRec] = []
+    @functools.cached_property
+    def recs(self) -> tuple[RefRec, ...]:
+        recs: list[RefRec] = []
         for instruction in self.instructions:
-            rec.extend(instruction.rec)
-        return rec
+            recs.extend(instruction.recs)
+        return tuple(recs)
 
-    def to_circuit(self) -> stim.Circuit:
-        circuit = stim.Circuit()
-        for iter_info in self.iterate_over_instruction():
-            circuit.append(iter_info.stim_instruction)
-        return circuit
+    @functools.cached_property
+    def rec_to_index(self) -> frozendict[int, int]:
+        return frozendict(
+            {id(ref_rec): index for index, ref_rec in enumerate(self.recs)}
+        )
 
-    def iterate_over_instruction(self) -> Iterable[RefIterInfo]:
-        measurement_indices: dict[int, int] = {}
-        num_measurements = 0
+    @functools.cached_property
+    def instruction_to_index(self) -> frozendict[int, int]:
+        return frozendict(
+            {
+                id(instruction): index
+                for index, instruction in enumerate(self.instructions)
+            }
+        )
+
+    @functools.cached_property
+    def instruction_rec_biases(self) -> tuple[int, ...]:
+        rec_bias: int = 0
+        rec_biases: list[int] = []
         for instruction in self.instructions:
-            # convert the reference instruction into relative index
+            rec_biases.append(rec_bias)
+            rec_bias += instruction.num_measurements
+        return tuple(rec_biases)
+
+    @functools.cached_property
+    def instruction_to_rec_bias(self) -> frozendict[int, int]:
+        return frozendict(
+            {
+                id(instruction): bias
+                for instruction, bias in zip(
+                    self.instructions, self.instruction_rec_biases
+                )
+            }
+        )
+
+    @functools.cached_property
+    def detectors(self) -> tuple[RefInstruction, ...]:
+        detectors: list[RefInstruction] = []
+        for instruction in self.instructions:
+            if instruction.name == "DETECTOR":
+                detectors.append(instruction)
+        return tuple(detectors)
+
+    @functools.cached_property
+    def detector_to_index(self) -> frozendict[int, int]:
+        return frozendict(
+            {id(detector): index for index, detector in enumerate(self.detectors)}
+        )
+
+    @functools.cached_property
+    def stim_instructions(self) -> tuple[stim.CircuitInstruction, ...]:
+        stim_instructions: list[stim.CircuitInstruction] = []
+        for instruction in self.instructions:
             relative_targets = []
-            rel_to_abs: dict[int, tuple[int, int]] = {}  # relative -> (absolute, count)
             for ref_target in instruction.targets:
                 if isinstance(ref_target, RefRec):
-                    assert id(ref_target.instruction) in measurement_indices, (
-                        f"referring to a measurement that does not exist, "
-                        + f"id={id(ref_target.instruction)} instruction={ref_target.instruction}"
+                    relative_targets.append(
+                        stim.target_rec(ref_target.rel_index(self, instruction))
                     )
-                    index = (
-                        measurement_indices[id(ref_target.instruction)]
-                        + ref_target.bias
-                    )
-                    relative_index = index - num_measurements
-                    relative_targets.append(stim.target_rec(relative_index))
-                    if relative_index in rel_to_abs:
-                        abs_index, count = rel_to_abs[relative_index]
-                        assert abs_index == index
-                        rel_to_abs[relative_index] = (abs_index, count + 1)
-                    else:
-                        rel_to_abs[relative_index] = (index, 1)
                 else:
                     relative_targets.append(ref_target)
-            # construct stim instruction using relative index
-            stim_instruction = stim.CircuitInstruction(
-                name=instruction.name,
-                targets=relative_targets,
-                gate_args=instruction.gate_args,
-                tag=instruction.tag,
+            stim_instructions.append(
+                stim.CircuitInstruction(
+                    name=instruction.name,
+                    targets=relative_targets,
+                    gate_args=instruction.gate_args,
+                    tag=instruction.tag,
+                )
             )
-            yield RefIterInfo(
-                measurement_indices=measurement_indices,
-                num_measurements=num_measurements,
-                instruction=instruction,
-                stim_instruction=stim_instruction,
-                relative_targets=relative_targets,
-                rel_to_abs=rel_to_abs,
-            )
-            # calculate the starting measurement index of the ref-instruction
-            assert (
-                id(instruction) not in measurement_indices
-            ), f"Duplicate instruction found, id={id(instruction)}, instruction={instruction}"
-            measurement_indices[id(instruction)] = num_measurements
-            num_measurements += instruction.num_measurements
+        return tuple(stim_instructions)
+
+    def circuit(self) -> stim.Circuit:
+        circuit = stim.Circuit()
+        for stim_instruction in self.stim_instructions:
+            circuit.append(stim_instruction)
+        return circuit
 
     def __getitem__(self, key: slice) -> "RefInstruction | RefCircuit":
         if isinstance(key, int):
@@ -203,17 +264,17 @@ class RefCircuit:
 
     def __add__(self, other: "RefCircuit | RefInstruction") -> "RefCircuit":
         if isinstance(other, RefInstruction):
-            return RefCircuit(self.instructions + [other])
+            return RefCircuit([*self.instructions, other])
         elif isinstance(other, RefCircuit):
-            return RefCircuit(self.instructions + other.instructions)
+            return RefCircuit([*self.instructions, *other.instructions])
         else:
             raise NotImplemented()
 
     def __radd__(self, other: "RefCircuit | RefInstruction") -> "RefCircuit":
         if isinstance(other, RefInstruction):
-            return RefCircuit([other] + self.instructions)
+            return RefCircuit([other, *self.instructions])
         elif isinstance(other, RefCircuit):
-            return RefCircuit(other.instructions + self.instructions)
+            return RefCircuit([*other.instructions, *self.instructions])
         else:
             raise NotImplemented()
 
@@ -230,9 +291,12 @@ class RefCircuit:
             )
             existing_instruction[id(instruction)] = index
         # check if all the references are valid in the current context
-        rec = self.rec()
-        rec_index_of: dict[int, int] = {id(rec): index for index, rec in enumerate(rec)}
-        assert len(rec_index_of) == len(rec), "has duplicate RefRec object"
+        rec_index_of: dict[int, int] = {
+            id(ref_rec): index for index, ref_rec in enumerate(self.recs)
+        }
+        assert len(rec_index_of) == len(self.recs), "has duplicate RefRec object"
+        rec_hashes = set(hash(rec) for rec in self.recs)
+        assert len(rec_hashes) == len(self.recs), "hash conflict"
         # check if the instructions only reference to the available RefRec objects
         # also check that all the RefRec objects refer to a valid Instruction
         previous_rec_set: set[int] = set()
@@ -245,16 +309,15 @@ class RefCircuit:
                         + f"id={id(ref_target)}, ref_target={ref_target}"
                     )
                     assert id(ref_target.instruction) in previous_instruction_set
-            for ref_rec in instruction.rec:
+            for ref_rec in instruction.recs:
                 assert id(ref_rec.instruction) == id(instruction)  # must refer itself
                 previous_rec_set.add(id(ref_rec))
             previous_instruction_set.add(id(instruction))
         # check that the number of measurements is correct
-        for iter_info in self.iterate_over_instruction():
-            assert (
-                iter_info.stim_instruction.num_measurements
-                == iter_info.instruction.num_measurements
-            )
+        for instruction, stim_instruction in zip(
+            self.instructions, self.stim_instructions
+        ):
+            assert stim_instruction.num_measurements == instruction.num_measurements
 
     def clone(self) -> "RefCircuit":
         """
@@ -262,17 +325,13 @@ class RefCircuit:
         with different ids, but keeping the circuit the same
         """
         new_instructions: list[RefInstruction] = []
-        old_rec = self.rec()
-        old_rec_index_of: dict[int, int] = {
-            id(rec): index for index, rec in enumerate(old_rec)
-        }
         new_rec: list[RefRec] = []
         for instruction in self.instructions:
             new_instruction = RefInstruction(
                 name=instruction.name,
                 targets=tuple(
                     (
-                        new_rec[old_rec_index_of[id(target)]]
+                        new_rec[self.rec_to_index[id(target)]]
                         if isinstance(target, RefRec)
                         else target
                     )
@@ -286,7 +345,8 @@ class RefCircuit:
                     instruction=new_instruction,
                     bias=bias,
                 )
-                new_instruction.rec.append(reference_rec)
+                new_instruction.recs.append(reference_rec)
                 new_rec.append(reference_rec)
+            new_instruction.recs.freeze()  # do not allow further edit
             new_instructions.append(new_instruction)
         return RefCircuit(new_instructions)
