@@ -25,6 +25,7 @@ class ErasureConversion(Noise):
     """
 
     rate: float
+    no_detectors: bool = False
 
     def __post_init__(self):
         assert self.rate >= 0
@@ -45,8 +46,9 @@ class ErasureConversion(Noise):
                     instruction.targets, min(1, 4 / 3 * p * self.rate)
                 )
                 instructions.append(new_ins)
-                for rec in new_ins.recs:
-                    instructions.append(RefInstruction.new_detector((rec,)))
+                if not self.no_detectors:
+                    for rec in new_ins.recs:
+                        instructions.append(RefInstruction.new_detector((rec,)))
             elif (
                 instruction.name == "X_ERROR"
                 or instruction.name == "Y_ERROR"
@@ -63,8 +65,9 @@ class ErasureConversion(Noise):
                     **{"p" + basis: p * self.rate}
                 )
                 instructions.append(new_ins)
-                for rec in new_ins.recs:
-                    instructions.append(RefInstruction.new_detector((rec,)))
+                if not self.no_detectors:
+                    for rec in new_ins.recs:
+                        instructions.append(RefInstruction.new_detector((rec,)))
             else:
                 instructions.append(instruction)
         new_circuit = RefCircuit.of(instructions)
