@@ -23,17 +23,26 @@ def logical_error_rate(
     no_print: bool = False,
     save_resume_filepath: Optional[str] = None,
     label: Optional[str] = None,
+    noise2: NoiseCli = "NoNoise",  # type: ignore
+    noise3: NoiseCli = "NoNoise",  # type: ignore
 ) -> Stats:
     code_instance = CodeCli(code)()
     noise_instance = NoiseCli(noise)()
+    noise2_instance = NoiseCli(noise2)()
+    noise3_instance = NoiseCli(noise3)()
     decoder_instance = DecoderCli(decoder)()
 
     ideal_circuit = code_instance.circuit
-    noisy_circuit = noise_instance(ideal_circuit)
+    noisy_circuit = noise3_instance(noise2_instance(noise_instance(ideal_circuit)))
+
+    if hasattr(decoder_instance, "pass_circuit") and decoder_instance.pass_circuit:
+        decoder_instance = decoder_instance.with_circuit(noisy_circuit)
 
     task = sinter.Task(
         circuit=noisy_circuit,
-        detector_error_model=noisy_circuit.detector_error_model(),
+        detector_error_model=noisy_circuit.detector_error_model(
+            approximate_disjoint_errors=True
+        ),
         decoder=str(decoder),
         collection_options=sinter.CollectionOptions(
             max_shots=max_shots, max_errors=max_errors
