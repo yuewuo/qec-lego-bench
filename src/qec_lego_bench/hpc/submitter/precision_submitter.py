@@ -5,7 +5,7 @@ from qec_lego_bench.stats import precision_to_errors
 @dataclass
 class PrecisionSubmitter:
     # the minimum precision before trying to achieve the target precision
-    min_precision: float = 0.5
+    min_precision: float | None = 0.5
     # the target precision,
     target_precision: float = 0.03
     # maximum CPU time to spend on each data point (roughly)
@@ -28,13 +28,18 @@ class PrecisionSubmitter:
             if job.duration >= self.time_limit:
                 continue
             errors = job.result.errors  # type: ignore
-            if errors < precision_to_errors(self.min_precision):
+            if self.min_precision is not None and errors < precision_to_errors(
+                self.min_precision
+            ):
                 continue
             target_precision = self.target_precision
             if errors / job.shots > self.high_pL_threshold:
                 target_precision = self.high_pL_precision
             target_errors = precision_to_errors(target_precision)
-            target_shots = math.ceil(target_errors / errors * job.shots)
+            if errors == 0:
+                target_shots = job.shots * 2  # double the shots
+            else:
+                target_shots = math.ceil(target_errors / errors * job.shots)
             if target_shots < job.expecting_shots:
                 continue
             remaining_shots = target_shots - job.expecting_shots
