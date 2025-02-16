@@ -25,6 +25,7 @@ def logical_error_rate(
     label: Optional[str] = None,
     noise2: NoiseCli = "NoNoise",  # type: ignore
     noise3: NoiseCli = "NoNoise",  # type: ignore
+    print_circuit: bool = False,
 ) -> Stats:
     code_instance = CodeCli(code)()
     noise_instance = NoiseCli(noise)()
@@ -34,6 +35,10 @@ def logical_error_rate(
 
     ideal_circuit = code_instance.circuit
     noisy_circuit = noise3_instance(noise2_instance(noise_instance(ideal_circuit)))
+
+    if print_circuit:
+        print(noisy_circuit)
+        exit(0)
 
     if hasattr(decoder_instance, "pass_circuit") and decoder_instance.pass_circuit:
         decoder_instance = decoder_instance.with_circuit(noisy_circuit)

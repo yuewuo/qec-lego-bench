@@ -12,10 +12,26 @@ qec\_lego\_bench.noises.depolarize\_noise module
    :undoc-members:
    :show-inheritance:
 
+qec\_lego\_bench.noises.erasure\_conversion module
+--------------------------------------------------
+
+.. automodule:: qec_lego_bench.noises.erasure_conversion
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 qec\_lego\_bench.noises.flip\_noise module
 ------------------------------------------
 
 .. automodule:: qec_lego_bench.noises.flip_noise
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+qec\_lego\_bench.noises.herald\_detectors module
+------------------------------------------------
+
+.. automodule:: qec_lego_bench.noises.herald_detectors
    :members:
    :undoc-members:
    :show-inheritance:

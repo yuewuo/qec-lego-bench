@@ -16,6 +16,15 @@ Since some of the decoders don't implement sinter.CompiledDecoder and can suffer
 we measure the time of the initialization and then remove that time from the evaluation.
 
 All decoders will be forced to use the same `decode_via_files` method, as it is provided for every decoder.
+
+When evaluating decoding speed, it is better to reduce the interference from the OS schedular.
+```sh
+papermill speed.ipynb zz-1.speed.ipynb  # run evaluation notebook in shell
+ps -aux --sort=-pcpu | grep python  # find the PID of the jupyter kernal
+sudo renice -n -20 -p <pid>
+sudo taskset -pc 2,3,4,5 <pid>  # set the CPUs to run on (avoid overlapping with other evaluations)
+```
+
 """
 
 
@@ -42,16 +51,23 @@ def decoding_speed(
     max_shots: int = 10000000,
     min_time: float = 3 * 60,  # at least 3 minutes decoding
     no_print: bool = False,
+    noise2: NoiseCli = "NoNoise",  # type: ignore
+    noise3: NoiseCli = "NoNoise",  # type: ignore
 ) -> DecodingSpeedResult:
     code_instance = CodeCli(code)()
     noise_instance = NoiseCli(noise)()
+    noise2_instance = NoiseCli(noise2)()
+    noise3_instance = NoiseCli(noise3)()
     decoder_instance = DecoderCli(decoder)()
 
     ideal_circuit = code_instance.circuit
-    noisy_circuit = noise_instance(ideal_circuit)
+    noisy_circuit = noise3_instance(noise2_instance(noise_instance(ideal_circuit)))
 
     circuit = noisy_circuit
-    dem = noisy_circuit.detector_error_model()
+    dem = noisy_circuit.detector_error_model(approximate_disjoint_errors=True)
+
+    if hasattr(decoder_instance, "pass_circuit") and decoder_instance.pass_circuit:
+        decoder_instance = decoder_instance.with_circuit(noisy_circuit)
 
     def initialization_task(shots: int) -> float:
         profiling_decoder = ProfilingDecoder(decoder_instance)

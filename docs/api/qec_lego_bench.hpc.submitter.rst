@@ -12,6 +12,14 @@ qec\_lego\_bench.hpc.submitter.adaptive\_p\_vec\_submitter module
    :undoc-members:
    :show-inheritance:
 
+qec\_lego\_bench.hpc.submitter.barrier module
+---------------------------------------------
+
+.. automodule:: qec_lego_bench.hpc.submitter.barrier
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 qec\_lego\_bench.hpc.submitter.min\_shots\_submitter module
 -----------------------------------------------------------
 
