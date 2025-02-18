@@ -1,8 +1,9 @@
-from typing import Any
+from typing import Any, Type, Callable
 import typing
 from urllib.parse import parse_qs
 import inspect
 import types
+from enum import Enum
 
 
 def kwargs_of_qs(qs: str) -> dict[str, str]:
@@ -54,6 +55,31 @@ def params_of_func_or_cls(func: Any) -> dict[str, Any]:
                 param.default is None
             ), f"default value of {param.name} must be None for Union[TYPE, None] in {func.__name__}"
             params[param.name] = args[0]
+        elif param.annotation == bool:
+            params[param.name] = bool_constructor
+        elif issubclass(param.annotation, Enum):
+            params[param.name] = enum_constructor_of(param.annotation)
         else:
             params[param.name] = param.annotation
     return params
+
+
+def bool_constructor(name: str) -> bool:
+    if name.lower() == "true" or name == "1":
+        return True
+    if name.lower() == "false" or name == "0":
+        return False
+    return bool(name)
+
+
+def enum_constructor_of(enum_class: Type[Enum]) -> Callable[[str], Enum]:
+    supported_names = {e.name: e for e in enum_class}
+
+    def constructor(name: str) -> Enum:
+        if name not in supported_names:
+            raise ValueError(
+                f"enum name {name} not in supported names: {list(supported_names.keys())}"
+            )
+        return supported_names[name]
+
+    return constructor

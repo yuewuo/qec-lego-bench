@@ -43,11 +43,10 @@ def logical_error_rate(
     if hasattr(decoder_instance, "pass_circuit") and decoder_instance.pass_circuit:
         decoder_instance = decoder_instance.with_circuit(noisy_circuit)
 
+    dem = noisy_circuit.detector_error_model(approximate_disjoint_errors=True)
     task = sinter.Task(
         circuit=noisy_circuit,
-        detector_error_model=noisy_circuit.detector_error_model(
-            approximate_disjoint_errors=True
-        ),
+        detector_error_model=dem,
         decoder=str(decoder),
         collection_options=sinter.CollectionOptions(
             max_shots=max_shots, max_errors=max_errors
@@ -71,7 +70,7 @@ def logical_error_rate(
         single_result = sample_decode(
             circuit_obj=task.circuit,
             circuit_path=None,
-            dem_obj=task.detector_error_model,
+            dem_obj=dem,
             dem_path=None,
             num_shots=max_shots,
             decoder=str(decoder),
