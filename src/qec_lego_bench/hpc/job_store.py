@@ -152,11 +152,8 @@ class JobStore:
                 for key in job.kwargs.keys():
                     assert entry["kwargs"][key] == str(job.kwargs[key]), "Hash conflict"
                 # add to current value
-                job.result = (
-                    None
-                    if entry["result"] is None
-                    else self.result_type.from_dict(entry["result"])
-                )
+                if entry["result"] is not None:
+                    job.result = self.result_type.from_dict(entry["result"])
 
     def update_file(self, filename: str) -> None:
         with portalocker.Lock(
@@ -187,10 +184,9 @@ class JobStore:
                         assert entry["kwargs"][key] == str(
                             job.kwargs[key]
                         ), "Hash conflict"
-                # update value
-                entry["result"] = (
-                    job.result.to_dict() if job.result is not None else None
-                )
+                # update value only if I have more information than the storage file
+                if job.result is not None:
+                    entry["result"] = job.result.to_dict()
             json.dump(persist, f, indent=2)
             f.truncate()
 
@@ -198,12 +194,19 @@ class JobStore:
         self,
         timeout: float = sys.float_info.max,
         loop_callback: Optional[Callable[["JobStore"], None]] = None,
+        starting_index_bias: float = 0.0,
+        reload_from_file_every: float = 10.,  # reload from file every 10s
     ) -> None:
         if loop_callback is not None:
             loop_callback(self)
         start = time.time()
         exceptions = []
-        pending_jobs = [job for job in self.jobs.values() if job.result is None]
+        def get_pending_jobs() -> list[Job]:
+            pending_jobs = [job for job in self.jobs.values() if job.result is None]
+            starting_index = int(max(0.0, min(1.0, starting_index_bias)) * len(pending_jobs))
+            return pending_jobs[starting_index:] + pending_jobs[:starting_index]
+        pending_jobs = get_pending_jobs()
+        last_reload_from_file = time.time()
         while len(pending_jobs) > 0:
             remaining_time = timeout - (time.time() - start)
             if remaining_time <= 0:
@@ -221,6 +224,10 @@ class JobStore:
             except Exception as e:
                 print(f"job {job} execution error", e)
                 exceptions.append(e)
-            pending_jobs = [job for job in self.jobs.values() if job.result is None]
+            if time.time() - last_reload_from_file >= reload_from_file_every:
+                if self.filename is not None:
+                    self.load_from_file(self.filename)  # load from file on initialization
+                last_reload_from_file = time.time()
+            pending_jobs = get_pending_jobs()
         if len(exceptions) > 0:
             raise exceptions[0]

@@ -22,7 +22,6 @@ class PrecisionSubmitter:
         self, jobs: Iterable[MonteCarloJob]
     ) -> list[tuple[MonteCarloJob, int]]:
         submit = []
-        print("Submitting jobs precision called")
         for job in jobs:
             if job.result is None:
                 continue
@@ -38,7 +37,7 @@ class PrecisionSubmitter:
                 target_precision = self.high_pL_precision
             target_errors = precision_to_errors(target_precision)
             if errors < 10:
-                target_shots = job.shots * 2  # double the shots
+                target_shots = job.shots * 4
             else:
                 target_shots = math.ceil(target_errors / errors * job.shots)
             if target_shots < job.expecting_shots:

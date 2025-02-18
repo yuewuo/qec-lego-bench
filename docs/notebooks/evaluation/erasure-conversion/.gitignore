@@ -2,3 +2,13 @@
 # notebooks in the subfolder must be added to git manually, to avoid unnecessary git history
 */**/*.ipynb
 *.sh
+
+!bb-code/plot.ipynb
+!bb-code/*.json
+!bb-code/logical-error-rate.ipynb
+!bb-code/speed.ipynb
+
+!rsc-code/plot.ipynb
+!rsc-code/*.json
+!rsc-code/logical-error-rate.ipynb
+!rsc-code/speed.ipynb
