@@ -1,4 +1,4 @@
-Logical Error Rate Evaluations
+evaluation
 ==============
 
 .. toctree::

@@ -1,8 +1,8 @@
 ==============
-qec_lego_bench
+QEC LEGO Bench
 ==============
 
-This is the documentation of **qec_lego_bench**.
+This is the documentation of **qec-lego-bench**.
 
 .. note::
 
@@ -38,8 +38,8 @@ Contents
    Introduction <notebooks/Introduction.ipynb>
    Preliminary Decoder Comparison <notebooks/preliminary-decoder-compare.ipynb>
    Monte Carlo Sampler Example <notebooks/monte-carlo-sampling-on-cluster.ipynb>
-   MWPF paper idea <notebooks/paper-flow.ipynb>
-   Evaluation <notebooks/evaluation/index.rst>
+   Evaluation <notebooks/evaluation/index>
+.. MWPF paper idea <notebooks/paper-flow.ipynb>
 
 
 Indices and tables

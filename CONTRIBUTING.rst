@@ -2,7 +2,7 @@
 Contributing
 ============
 
-Welcome to ``qec_lego_bench`` contributor's guide.
+Welcome to ``qec-lego-bench`` contributor's guide.
 
 This document focuses on getting any potential contributor familiarized
 with the development processes, but `other kinds of contributions`_ are also
@@ -21,7 +21,7 @@ guidelines.
 Issue Reports
 =============
 
-If you experience bugs or general issues with ``qec_lego_bench``, please have a look
+If you experience bugs or general issues with ``qec-lego-bench``, please have a look
 on the `issue tracker`_. If you don't see anything useful there, please feel
 free to fire an issue report.
 
@@ -40,10 +40,10 @@ you help us to identify the root cause of the issue.
 Documentation Improvements
 ==========================
 
-You can help improve ``qec_lego_bench`` docs by making them more readable and coherent, or
+You can help improve ``qec-lego-bench`` docs by making them more readable and coherent, or
 by adding missing information and correcting mistakes.
 
-``qec_lego_bench`` documentation uses Sphinx_ as its main documentation compiler.
+``qec-lego-bench`` documentation uses Sphinx_ as its main documentation compiler.
 This means that the docs are kept in the same repository as the project code, and
 that any documentation update is done in the same way was a code contribution.
 
@@ -51,7 +51,7 @@ We use reStructuredText_ with nbsphinx_ extension.
 
 .. tip::
    Please notice that the `GitHub web interface`_ provides a quick way of
-   propose changes in ``qec_lego_bench``'s files. While this mechanism can
+   propose changes in ``qec-lego-bench``'s files. While this mechanism can
    be tricky for normal code contributions, it works perfectly fine for
    contributing to the docs, and can be quite handy.
 
@@ -102,8 +102,8 @@ This can easily be done via either |virtualenv|_::
 
 or Miniconda_::
 
-    conda create -n qec_lego_bench python=3 six virtualenv pytest pytest-cov
-    conda activate qec_lego_bench
+    conda create -n qec-lego-bench python=3 six virtualenv pytest pytest-cov
+    conda activate qec-lego-bench
 
 Clone the repository
 --------------------
@@ -113,8 +113,8 @@ Clone the repository
    page. This creates a copy of the code under your account on |the repository service|.
 #. Clone this copy to your local disk::
 
-    git clone git@github.com:yuewuo/qec-lego-bench.git qec_lego_bench
-    cd qec_lego_bench
+    git clone git@github.com:yuewuo/qec-lego-bench.git qec-lego-bench
+    cd qec-lego-bench
 
 #. You should run::
 
@@ -232,7 +232,7 @@ Releases
 
 If you are part of the group of maintainers and have correct user permissions
 on PyPI_, the following steps can be used to release a new version for
-``qec_lego_bench``:
+``qec-lego-bench``:
 
 #. Make sure all unit tests are successful.
 #. Tag the current commit on the main branch with a release tag, e.g., ``v1.2.3``.

@@ -28,6 +28,14 @@ qec\_lego\_bench.cli.decoding\_speed module
    :undoc-members:
    :show-inheritance:
 
+qec\_lego\_bench.cli.generate\_samples module
+---------------------------------------------
+
+.. automodule:: qec_lego_bench.cli.generate_samples
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 qec\_lego\_bench.cli.logical\_error\_rate module
 ------------------------------------------------
 

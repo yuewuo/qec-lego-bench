@@ -1,5 +1,5 @@
 """
-    Setup file for qec_lego_bench.
+    Setup file for qec-lego-bench.
     Use setup.cfg to configure your project.
 
     This file was generated with PyScaffold 4.6.
