@@ -57,7 +57,7 @@ def params_of_func_or_cls(func: Any) -> dict[str, Any]:
             params[param.name] = args[0]
         elif param.annotation == bool:
             params[param.name] = bool_constructor
-        elif issubclass(param.annotation, Enum):
+        elif inspect.isclass(param.annotation) and issubclass(param.annotation, Enum):
             params[param.name] = enum_constructor_of(param.annotation)
         else:
             params[param.name] = param.annotation
