@@ -31,3 +31,18 @@ try:
 except BaseException as e:
     # print(e)
     pass
+
+
+try:
+    from mwpf_incr import (  # type: ignore
+        SinterMWPFIncrDecoder,
+        SinterHUFIncrDecoder,
+        SinterSingleHairIncrDecoder,
+    )
+
+    decoder_cli("MWPF_incr", "mwpfi")(SinterMWPFIncrDecoder)
+    decoder_cli("HUF_incr", "hufi")(SinterHUFIncrDecoder)
+    decoder_cli("MWPF_SH_incr", "mwpfshi")(SinterSingleHairIncrDecoder)
+except BaseException as e:
+    # print(e)
+    pass

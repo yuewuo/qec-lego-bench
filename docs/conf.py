@@ -90,7 +90,7 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "qec-lego-bench"
+project = "qec_lego_bench"
 copyright = "2024, Yue Wu"
 
 # The version info for the project you're documenting, acts as replacement for
