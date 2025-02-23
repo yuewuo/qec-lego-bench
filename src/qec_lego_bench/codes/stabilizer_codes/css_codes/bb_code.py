@@ -33,14 +33,16 @@ class BBCode(CSSCode):
         lm = self.l * self.m
 
         self.matrix_A: ArrayLike = GF2(np.zeros((lm, lm), dtype=np.uint8))
-        self.matrix_A += x_matrix(self.l, self.m, self.a[0])
-        self.matrix_A += y_matrix(self.l, self.m, self.a[1])
-        self.matrix_A += y_matrix(self.l, self.m, self.a[2])
+        self.A1 = x_matrix(self.l, self.m, self.a[0])
+        self.A2 = y_matrix(self.l, self.m, self.a[1])
+        self.A3 = y_matrix(self.l, self.m, self.a[2])
+        self.matrix_A += self.A1 + self.A2 + self.A3
 
         self.matrix_B: ArrayLike = GF2(np.zeros((lm, lm), dtype=np.uint8))
-        self.matrix_B += y_matrix(self.l, self.m, self.b[0])
-        self.matrix_B += x_matrix(self.l, self.m, self.b[1])
-        self.matrix_B += x_matrix(self.l, self.m, self.b[2])
+        self.B1 = y_matrix(self.l, self.m, self.b[0])
+        self.B2 = x_matrix(self.l, self.m, self.b[1])
+        self.B3 = x_matrix(self.l, self.m, self.b[2])
+        self.matrix_B += self.B1 + self.B2 + self.B3
 
         assert (self.matrix_A @ self.matrix_B == self.matrix_B @ self.matrix_A).all()
         self._H_X = np.concatenate((self.matrix_A, self.matrix_B), axis=1)
@@ -135,14 +137,14 @@ def bb_code_cli(n: int, k: int, d: int) -> BBCode:
     raise ValueError(f"no BBCode with n={n}, k={k}, d={d}")
 
 
-def x_matrix(l: int, m: int, exp: int):
+def x_matrix(l: int, m: int, exp: int) -> np.ndarray:
     S = GF2(np.zeros((l, l), dtype=np.uint8))
     for i in range(l):
         S[i, (i + exp) % l] = 1
     return np.kron(S, GF2(np.eye(m, dtype=np.uint8)))
 
 
-def y_matrix(l: int, m: int, exp: int):
+def y_matrix(l: int, m: int, exp: int) -> np.ndarray:
     S = GF2(np.zeros((m, m), dtype=np.uint8))
     for i in range(m):
         S[i, (i + exp) % m] = 1
