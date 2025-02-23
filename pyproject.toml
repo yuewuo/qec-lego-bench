@@ -20,6 +20,7 @@ module = [
     "uncertainties.*",
     "hjson.*",
     "dotmap.*",
+    "dask_jobqueue.*",
 ]
 follow_untyped_imports = true
 ignore_missing_imports = true

@@ -96,7 +96,7 @@ class LogicalErrorResult(MonteCarloResult):
 
     @staticmethod
     def from_stats(stats: Stats) -> "LogicalErrorResult":
-        return LogicalErrorResult(
+        return LogicalErrorResult(  # type: ignore
             errors=stats.errors, discards=stats.discards, panic_cases=stats.panic_cases
         )
 
@@ -422,13 +422,13 @@ class MonteCarloJobExecutor:
                     for done, job_result in as_completed(
                         futures.done, with_results=True, raise_errors=False
                     ):
-                        if future.status == "error":
+                        if done.status == "error":
                             # 2025.2.10: slurmstepd: error: *** JOB 15338504 ON r815u15n07 CANCELLED AT 2025-02-10T11:56:44 DUE TO PREEMPTION ***
                             # The schedular thinks it is the job itself that causes the failure
                             # but it is actually the slurm that kills the job in scavenge partition
                             # try to catch this case and just retry the future instead of killing the schedular
-                            future.retry()
-                            self.pending_futures.append(future)
+                            done.retry()
+                            self.pending_futures.append(done)
                             continue
                         job_result = cast(MonitoredResult, job_result)
                         assert isinstance(done, Future)

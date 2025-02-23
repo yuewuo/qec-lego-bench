@@ -55,7 +55,7 @@ class ErasureConversion(Noise):
                 or instruction.name == "Z_ERROR"
             ):
                 basis = instruction.name[0]
-                p: float = instruction.gate_args[0]
+                p = instruction.gate_args[0]
                 instructions.append(
                     replace(instruction, gate_args=(p * (1 - self.rate),))
                 )

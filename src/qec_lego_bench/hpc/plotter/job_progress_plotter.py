@@ -70,12 +70,13 @@ class JobProgressPlotter:
                 ]
             if show_logical_error:
                 if job.result is not None:
-                    stats = job.result.stats_of(job)  # type: ignore
+                    result = cast(LogicalErrorResult, job.result)
+                    stats = result.stats_of(job)  # type: ignore
                     row.extend(
                         [
-                            job.result.errors,
-                            job.result.discards,
-                            job.result.panics,
+                            result.errors,
+                            result.discards,
+                            result.panics,
                             f"{stats.failure_rate:.1uS}",
                         ]
                     )
@@ -93,7 +94,7 @@ class JobProgressPlotter:
         finished_jobs = [["finished"] + row for row in finished_jobs]
         if self.sort_by_name:
             jobs = pending_jobs + panic_jobs + finished_jobs
-            jobs.sort(key=lambda e: e[2])
+            jobs.sort(key=lambda e: e[2])  # type: ignore
         else:
             pending_jobs.sort(key=lambda e: -cast(MonteCarloJob, e[1]).duration)
             finished_jobs.sort(
@@ -106,7 +107,7 @@ class JobProgressPlotter:
             jobs = pending_jobs + panic_jobs + finished_jobs
         if len(jobs) == 0:
             return
-        data = {header: [] for header in column_headers}
+        data: dict = {header: [] for header in column_headers}
         for row in jobs:
             job = cast(MonteCarloJob, row[1])
             text_row = [row[0], job.hash[:6]] + [str(e) for e in row[2:]]
