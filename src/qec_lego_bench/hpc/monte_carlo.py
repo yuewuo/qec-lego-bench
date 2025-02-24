@@ -36,6 +36,7 @@ from .job_store import JobParameters
 from .panic_store import PanicStore, JobPanic
 import traceback
 import multiprocessing
+import gc
 
 
 def hex_hash(value: Any) -> str:
@@ -422,17 +423,18 @@ class MonteCarloJobExecutor:
                     for done, job_result in as_completed(
                         futures.done, with_results=True, raise_errors=False
                     ):
+                        assert isinstance(done, Future)
+                        job = self.future_info[done]
                         if done.status == "error":
                             # 2025.2.10: slurmstepd: error: *** JOB 15338504 ON r815u15n07 CANCELLED AT 2025-02-10T11:56:44 DUE TO PREEMPTION ***
                             # The schedular thinks it is the job itself that causes the failure
                             # but it is actually the slurm that kills the job in scavenge partition
                             # try to catch this case and just retry the future instead of killing the schedular
+                            print(f"job status error: {job}, retry")
                             done.retry()
                             self.pending_futures.append(done)
                             continue
                         job_result = cast(MonitoredResult, job_result)
-                        assert isinstance(done, Future)
-                        job = self.future_info[done]
                         if job_result.panic_info is not None:
                             # job panics, record it
                             job_panic = JobPanic(
@@ -460,6 +462,7 @@ class MonteCarloJobExecutor:
                                 job.min_time = min(job.min_time, job_result.duration)
                         del self.future_info[done]
                         client.cancel(done)
+                        del done
                 # get the next job to run
                 while True:
                     # make the development of the submitter easier by iteratively call them
@@ -535,6 +538,7 @@ class MonteCarloJobExecutor:
                 # call user callback such that they can do some plotting of the intermediate results
                 if loop_callback is not None:
                     loop_callback(self)
+                gc.collect()  # manually collect the garbage
                 if not self._loop_again():
                     break
                 if len(self.pending_futures) == 0 and len(self.pending_submit) == 0:

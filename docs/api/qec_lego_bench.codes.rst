@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   qec_lego_bench.codes.circuit_level_codes
    qec_lego_bench.codes.noisy_codes
    qec_lego_bench.codes.stabilizer_codes
 

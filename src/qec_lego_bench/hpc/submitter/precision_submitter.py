@@ -23,23 +23,24 @@ class PrecisionSubmitter:
     ) -> list[tuple[MonteCarloJob, int]]:
         submit = []
         for job in jobs:
-            if job.result is None:
+            if self.min_precision is not None and job.result is None:
                 continue
             if self.time_limit is not None and job.duration >= self.time_limit:
                 continue
-            errors = job.result.errors  # type: ignore
+            errors = 0 if job.result is None else job.result.errors  # type: ignore
             if self.min_precision is not None and errors < precision_to_errors(
                 self.min_precision
             ):
                 continue
             target_precision = self.target_precision
-            if errors / job.shots > self.high_pL_threshold:
+            shots = max(job.shots, 1)
+            if errors / shots > self.high_pL_threshold:
                 target_precision = self.high_pL_precision
             target_errors = precision_to_errors(target_precision)
             if errors < 10:
-                target_shots = job.shots * 4
+                target_shots = shots * 4
             else:
-                target_shots = math.ceil(target_errors / errors * job.shots)
+                target_shots = math.ceil(target_errors / errors * shots)
             if target_shots < job.expecting_shots:
                 continue
             remaining_shots = target_shots - job.expecting_shots

@@ -17,8 +17,15 @@ class MemoryUsagePlotter:
     start: float = field(default_factory=lambda: time.time())
     time_vec: list[float] = field(default_factory=list)
     rss_vec: list[float] = field(default_factory=list)
+    update_interval_sec: float = 1
 
     def __call__(self, executor: MonteCarloJobExecutor):
+        last_time = 0
+        if self.time_vec:
+            last_time = self.time_vec[-1]
+        if time.time() - self.start < last_time + self.update_interval_sec:
+            # skip because we do not want to blow the memory by recording so many data points
+            return
         process = psutil.Process()
         self.time_vec.append(time.time() - self.start)
         self.rss_vec.append(process.memory_info().rss / 1e6)
