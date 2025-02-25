@@ -13,6 +13,7 @@ from .decoders import *
 import tempfile
 import hashlib
 import os
+from pathlib import Path
 from qec_lego_bench.codes.circuit_code import CircuitCode
 
 """
@@ -130,10 +131,10 @@ def benchmark_samples(
             num_shots=num_shots,
             num_dets=num_dets,
             num_obs=num_obs,
-            dem_path=dem_filename,
-            dets_b8_in_path=det_filename,
-            obs_predictions_b8_out_path=tmp_dir + "/predicted.b8",
-            tmp_dir=tmp_dir,
+            dem_path=Path(dem_filename),
+            dets_b8_in_path=Path(det_filename),
+            obs_predictions_b8_out_path=Path(tmp_dir + "/predicted.b8"),
+            tmp_dir=Path(tmp_dir),
         )
     elapsed = profiling_decoder.elapsed
     decoding_time = elapsed / num_shots

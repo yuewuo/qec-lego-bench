@@ -20,7 +20,7 @@ class MemoryUsagePlotter:
     update_interval_sec: float = 1
 
     def __call__(self, executor: MonteCarloJobExecutor):
-        last_time = 0
+        last_time = 0.0
         if self.time_vec:
             last_time = self.time_vec[-1]
         if time.time() - self.start < last_time + self.update_interval_sec:
