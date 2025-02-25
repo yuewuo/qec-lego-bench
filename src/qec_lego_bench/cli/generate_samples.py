@@ -1,8 +1,5 @@
 import arguably
-from typing import Callable, Tuple, Optional
-from sinter._decoding import sample_decode
 from qec_lego_bench.decoders.profiling_decoder import ProfilingDecoder
-from dataclasses_json import dataclass_json
 from dataclasses import dataclass
 import stim
 import tempfile
@@ -13,6 +10,7 @@ from .decoders import *
 import tempfile
 import hashlib
 import os
+import numpy as np
 from pathlib import Path
 from qec_lego_bench.codes.circuit_code import CircuitCode
 
@@ -97,17 +95,24 @@ def generate_samples(
         )
 
 
+@dataclass
+class BenchmarkSamplesResult:
+    elapsed: float
+    shots: int
+    errors: int
+
+
 @arguably.command
 def benchmark_samples(
     filename: str,  # record the evaluation data of min_shots; it will generate a .dem file and a .b8 file separately
     *,
     max_shots: int | None = None,
     decoder: DecoderCli = "mwpf",  # type: ignore
-) -> tuple[float, int]:
+) -> BenchmarkSamplesResult:
     circuit_filename = filename + ".stim"
     dem_filename = filename + ".dem"
     det_filename = filename + ".det.b8"
-    # obs_filename = filename + ".obs.b8"
+    obs_filename = filename + ".obs.b8"
 
     code = CircuitCode(filepath=circuit_filename)
     decoder_instance = DecoderCli(decoder)()
@@ -119,31 +124,47 @@ def benchmark_samples(
 
     num_dets = circuit.num_detectors
     num_obs = circuit.num_observables
-    bytes_per_shot = (num_dets + 7) // 8
+    det_bytes_per_shot = (num_dets + 7) // 8
     det_bytes = os.path.getsize(det_filename)
-    assert det_bytes % bytes_per_shot == 0, "inconsistent byte size"
-    shots: int = det_bytes // bytes_per_shot
+    assert det_bytes % det_bytes_per_shot == 0, "inconsistent byte size"
+    shots: int = det_bytes // det_bytes_per_shot
+    obs_bytes_per_shot = (num_obs + 7) // 8
+    obs_bytes = os.path.getsize(obs_filename)
+    assert obs_bytes % obs_bytes_per_shot == 0, "inconsistent byte size"
+    assert shots * obs_bytes_per_shot == obs_bytes, "obs doesn't match det size"
 
     profiling_decoder = ProfilingDecoder(decoder_instance)
     num_shots = shots if max_shots is None else min(shots, max_shots)
     with tempfile.TemporaryDirectory() as tmp_dir:
+        predicts_path = Path(tmp_dir + "/predicted.b8")
         profiling_decoder.decode_via_files(
             num_shots=num_shots,
             num_dets=num_dets,
             num_obs=num_obs,
             dem_path=Path(dem_filename),
             dets_b8_in_path=Path(det_filename),
-            obs_predictions_b8_out_path=Path(tmp_dir + "/predicted.b8"),
+            obs_predictions_b8_out_path=predicts_path,
             tmp_dir=Path(tmp_dir),
         )
+        # compare with the ground truth to get number of logical errors
+        obs = np.fromfile(obs_filename, dtype=np.uint8).reshape(
+            (shots, obs_bytes_per_shot)
+        )
+        predicts = np.fromfile(predicts_path, dtype=np.uint8).reshape(
+            (num_shots, obs_bytes_per_shot)
+        )
+        success = np.count_nonzero((obs == predicts).all(axis=1))
+        errors = num_shots - success
+
     elapsed = profiling_decoder.elapsed
     decoding_time = elapsed / num_shots
 
     print(
         f"decoding time: {decoding_time:.3e}s, elapsed: {elapsed:.3e}s, shots: {num_shots}"
     )
+    print(f"logical error rate: {errors}/{num_shots} = {errors/num_shots:.3e}")
 
-    return elapsed, num_shots
+    return BenchmarkSamplesResult(elapsed=elapsed, shots=num_shots, errors=errors)
 
 
 @arguably.command
