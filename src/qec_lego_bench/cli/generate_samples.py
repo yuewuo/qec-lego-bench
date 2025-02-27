@@ -108,6 +108,8 @@ def benchmark_samples(
     *,
     max_shots: int | None = None,
     decoder: DecoderCli = "mwpf",  # type: ignore
+    predict_filename: str | None = None,
+    compact_print: bool = False,
 ) -> BenchmarkSamplesResult:
     circuit_filename = filename + ".stim"
     dem_filename = filename + ".dem"
@@ -136,7 +138,7 @@ def benchmark_samples(
     profiling_decoder = ProfilingDecoder(decoder_instance)
     num_shots = shots if max_shots is None else min(shots, max_shots)
     with tempfile.TemporaryDirectory() as tmp_dir:
-        predicts_path = Path(tmp_dir + "/predicted.b8")
+        predicts_path = Path(predict_filename or (tmp_dir + "/predicted.b8"))
         profiling_decoder.decode_via_files(
             num_shots=num_shots,
             num_dets=num_dets,
@@ -159,10 +161,14 @@ def benchmark_samples(
     elapsed = profiling_decoder.elapsed
     decoding_time = elapsed / num_shots
 
-    print(
-        f"decoding time: {decoding_time:.3e}s, elapsed: {elapsed:.3e}s, shots: {num_shots}"
-    )
-    print(f"logical error rate: {errors}/{num_shots} = {errors/num_shots:.3e}")
+    if compact_print:
+        print("# <elapsed> <shots> <errors>")
+        print(elapsed, num_shots, errors)
+    else:
+        print(
+            f"decoding time: {decoding_time:.3e}s, elapsed: {elapsed:.3e}s, shots: {num_shots}"
+        )
+        print(f"logical error rate: {errors}/{num_shots} = {errors/num_shots:.3e}")
 
     return BenchmarkSamplesResult(elapsed=elapsed, shots=num_shots, errors=errors)
 
@@ -200,7 +206,8 @@ def verify_deterministic_samples(*, quick: bool = False):
     shots = 100
     success = True
     for code, noise, seed, circuit_md5, det_md5, obs_md5 in code_noises:
-        print(f"==== running code={code}, noise={noise}, seed={seed} ====")
+        if not quick:
+            print(f"==== running code={code}, noise={noise}, seed={seed} ====")
         with tempfile.NamedTemporaryFile() as tmp:
             generate_samples(code, tmp.name, noise=noise, shots=shots, seed=seed)
             circuit_file = tmp.name + ".stim"

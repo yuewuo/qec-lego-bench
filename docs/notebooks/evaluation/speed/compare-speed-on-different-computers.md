@@ -46,4 +46,20 @@ decoding time: 3.428e-04s, elapsed: 6.856e+00s, shots: 20000
 decoding time: 1.321e-04s, elapsed: 2.641e+00s, shots: 20000
 decoding time: 1.319e-04s, elapsed: 2.639e+00s, shots: 20000
 decoding time: 1.346e-04s, elapsed: 2.693e+00s, shots: 20000
+# --decoder 'bposd(max_iter=1000,ms_scaling_factor=1,osd_order=10,osd_method=osd_cs)'
+decoding time: 2.398e-04s, elapsed: 4.795e+00s, shots: 20000
+decoding time: 2.454e-04s, elapsed: 4.907e+00s, shots: 20000
+decoding time: 2.398e-04s, elapsed: 4.796e+00s, shots: 20000
 ```
+
+### M4 Base (256GB SSD, 16GB RAM)
+
+```sh
+# --decoder mwpf
+decoding time: 1.103e-04s, elapsed: 2.207e+00s, shots: 20000
+decoding time: 1.108e-04s, elapsed: 2.215e+00s, shots: 20000
+decoding time: 1.110e-04s, elapsed: 2.219e+00s, shots: 20000
+# --decoder 'bposd(max_iter=1000,ms_scaling_factor=1,osd_order=10,osd_method=osd_cs)'
+decoding time: 2.330e-04s, elapsed: 4.659e+00s, shots: 20000
+decoding time: 2.348e-04s, elapsed: 4.695e+00s, shots: 20000
+decoding time: 2.357e-04s, elapsed: 4.714e+00s, shots: 20000
