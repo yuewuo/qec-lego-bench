@@ -33,6 +33,8 @@ class BPOSD(sinter.Decoder):
 
     osd_order: int = 0  # The OSD order
 
+    trace_filename: Optional[str] = None
+
     def decode_via_files(
         self,
         *,
@@ -54,6 +56,11 @@ class BPOSD(sinter.Decoder):
             osd_method=self.osd_method,
             osd_order=self.osd_order,
         )
+        if self.trace_filename is not None:
+            assert hasattr(
+                decoder, "trace_filename"
+            ), "please use custom version of bposd at https://github.com/yuewuo/ldpc"
+            decoder.trace_filename = self.trace_filename
         return decoder.decode_via_files(
             num_shots=num_shots,
             num_dets=num_dets,

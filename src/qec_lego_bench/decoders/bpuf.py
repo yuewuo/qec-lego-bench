@@ -36,6 +36,8 @@ class BPUF(sinter.Decoder):
     # Specifies the number of bits added to the cluster in each step of the UFD algorithm. If no value is provided, this is set the block length of the code.
     bits_per_step: int = 0
 
+    trace_filename: Optional[str] = None
+
     def decode_via_files(
         self,
         *,
@@ -57,6 +59,11 @@ class BPUF(sinter.Decoder):
             uf_method=self.uf_method,
             bits_per_step=self.bits_per_step,
         )
+        if self.trace_filename is not None:
+            assert hasattr(
+                decoder, "trace_filename"
+            ), "please use custom version of bposd at https://github.com/yuewuo/ldpc"
+            decoder.trace_filename = self.trace_filename
         return decoder.decode_via_files(
             num_shots=num_shots,
             num_dets=num_dets,
