@@ -41,11 +41,12 @@ class PrecisionSubmitter:
                 target_shots = shots * 4
             else:
                 target_shots = math.ceil(target_errors / errors * shots)
-            if target_shots < job.expecting_shots:
+            if target_shots <= job.expecting_shots:
                 continue
             remaining_shots = target_shots - job.expecting_shots
             if (
                 self.time_limit is not None
+                and job.finished_shots > 0
                 and (remaining_shots * job.duration_per_shot - job.duration)
                 > self.time_limit
             ):

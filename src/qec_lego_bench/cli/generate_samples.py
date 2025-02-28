@@ -37,6 +37,7 @@ def generate_samples(
     mwpf_benchmark_suite: bool = False,
     decoder: DecoderCli = "mwpf",  # type: ignore
     seed: int | None = None,
+    no_print: bool = False,
 ):
     code_instance = CodeCli(code)()
     noise_instance = NoiseCli(noise)()
@@ -50,12 +51,14 @@ def generate_samples(
 
     if not no_circuit:
         circuit_filename = filename + ".stim"
-        print("Writing Circuit file to", circuit_filename)
+        if not no_print:
+            print("Writing Circuit file to", circuit_filename)
         circuit.to_file(circuit_filename)
 
     if not no_dem or not mwpf_benchmark_suite:
         dem_filename = filename + ".dem"
-        print("Writing DEM file to", dem_filename)
+        if not no_print:
+            print("Writing DEM file to", dem_filename)
         dem = noisy_circuit.detector_error_model(approximate_disjoint_errors=True)
         dem.to_file(dem_filename)
         num_dets = dem.num_detectors
@@ -64,7 +67,10 @@ def generate_samples(
     if not no_samples or not mwpf_benchmark_suite:
         det_filename = filename + ".det.b8"
         obs_filename = filename + ".obs.b8"
-        print("Writing detectors to", det_filename, "and observables to", obs_filename)
+        if not no_print:
+            print(
+                "Writing detectors to", det_filename, "and observables to", obs_filename
+            )
         sampler: stim.CompiledDetectorSampler = circuit.compile_detector_sampler(
             seed=seed
         )
@@ -78,7 +84,8 @@ def generate_samples(
 
     if mwpf_benchmark_suite:
         cbor_filename = filename + ".cbor"
-        print("Writing Benchmark Suite file to", cbor_filename)
+        if not no_print:
+            print("Writing Benchmark Suite file to", cbor_filename)
         decoder_instance = DecoderCli(decoder)()
         if hasattr(decoder_instance, "pass_circuit") and decoder_instance.pass_circuit:
             decoder_instance = decoder_instance.with_circuit(noisy_circuit)
@@ -110,6 +117,7 @@ def benchmark_samples(
     decoder: DecoderCli = "mwpf",  # type: ignore
     predict_filename: str | None = None,
     compact_print: bool = False,
+    no_print: bool = False,
 ) -> BenchmarkSamplesResult:
     circuit_filename = filename + ".stim"
     dem_filename = filename + ".dem"
@@ -161,10 +169,10 @@ def benchmark_samples(
     elapsed = profiling_decoder.elapsed
     decoding_time = elapsed / num_shots
 
-    if compact_print:
+    if compact_print and not no_print:
         print("# <elapsed> <shots> <errors>")
         print(elapsed, num_shots, errors)
-    else:
+    elif not no_print:
         print(
             f"decoding time: {decoding_time:.3e}s, elapsed: {elapsed:.3e}s, shots: {num_shots}"
         )

@@ -56,7 +56,7 @@ class MonteCarloResult(Protocol):
 Result = TypeVar("Result", bound=MonteCarloResult)
 
 
-@dataclass_json
+@dataclass_json(undefined="RAISE")  # avoid accidentally override other types
 @dataclass
 class LogicalErrorResult(MonteCarloResult):
     errors: int = 0

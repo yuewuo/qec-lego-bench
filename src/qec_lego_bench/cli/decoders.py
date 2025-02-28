@@ -27,6 +27,7 @@ class DecoderCli:
         if isinstance(input, DecoderCli):
             self.input: str = input.input
             self.decoder: Any = input.decoder
+            self.kwargs: dict = input.kwargs.copy()
             return
         try:
             self.input = input
@@ -39,14 +40,14 @@ class DecoderCli:
                 )
                 raise ValueError()
             cls, expected_params = registered_decoder_names[decoder_name]
-            kwargs = {}
+            self.kwargs = {}
             for param in params:
                 assert (
                     param in expected_params
                 ), f"unexpected parameter '{param}', expecting one of {', '.join(expected_params.keys())}"
                 constructor = expected_params[param]
-                kwargs[param] = constructor(params[param])
-            self.decoder = cls(**kwargs)
+                self.kwargs[param] = constructor(params[param])
+            self.decoder = cls(**self.kwargs)
         except Exception as e:
             print(f"[error] {e}", file=sys.stderr)
             raise e

@@ -13,6 +13,7 @@ Subpackages
    qec_lego_bench.hpc
    qec_lego_bench.misc
    qec_lego_bench.noises
+   qec_lego_bench.notebooks
 
 Submodules
 ----------

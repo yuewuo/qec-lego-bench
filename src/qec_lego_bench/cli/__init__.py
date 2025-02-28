@@ -4,7 +4,7 @@ from . import logical_error_rate
 from . import predict_on_disk
 from . import decoding_speed
 from . import generate_samples
-from qec_lego_bench import noises, decoders, codes, misc
+from qec_lego_bench import noises, decoders, codes, misc, notebooks
 
 
 def run():

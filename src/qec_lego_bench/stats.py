@@ -79,13 +79,13 @@ class Stats:
     def __str__(self) -> str:
         content = "0/0"
         if self.samples != 0:
-            content = f"Stats{{ pL = {self.str_pL()}{self.str_speed(', speed=')}"
+            content = f"pL = {self.str_pL()}{self.str_speed(', speed=')}"
         if self.panic_cases is not None:
             content += f", panicked: {len(self.panic_cases)}"
         return "Stats{ " + content + " }"
 
     def str_pL(self) -> str:
-        return f"{self.failed}/{self.samples}= {self.failure_rate:.1uS}"
+        return f"{self.failed}/{self.samples} = {self.failure_rate:.1uS}"
 
     def str_speed(self, prefix: str = "") -> str:
         if self.duration != 0:
