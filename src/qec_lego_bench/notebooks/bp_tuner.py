@@ -6,8 +6,7 @@ from qec_lego_bench.cli.noises import *
 from qec_lego_bench.cli.decoders import *
 import os
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
-from qec_lego_bench.hpc.monte_carlo import MonteCarloResult, LogicalErrorResult
+from qec_lego_bench.hpc.monte_carlo import LogicalErrorResult
 from qec_lego_bench.hpc.monte_carlo import *
 from qec_lego_bench.hpc.submitter import *
 from qec_lego_bench.hpc.plotter import *
@@ -19,7 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib as mpl
-import matplotlib.ticker as mticker
+from .common import MultiDecoderLogicalErrorRates
 
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -95,50 +94,8 @@ def notebook_bp_tuner(
         parameters=parameters,
         prepare_only=prepare_only,
         progress_bar=not no_progress_bar,
+        cwd=os.path.dirname(os.path.abspath(notebook_filepath)),
     )
-
-
-@dataclass_json(undefined="RAISE")  # avoid accidentally override other types
-@dataclass
-class MultiDecoderLogicalErrorRates(MonteCarloResult):
-    results: dict[str, LogicalErrorResult] = field(default_factory=dict)
-
-    def __add__(
-        self, other: "MultiDecoderLogicalErrorRates"
-    ) -> "MultiDecoderLogicalErrorRates":
-        results = self.results.copy()
-        for decoder, result in other.results.items():
-            if decoder in results:
-                results[decoder] += result
-            else:
-                results[decoder] = result
-        return MultiDecoderLogicalErrorRates(results=results)
-
-    @property
-    def errors(self) -> int:
-        # used by the submitter, return the smallest number of errors
-        errors = None
-        for result in self.results.values():
-            if errors is None or result.errors < errors:
-                errors = result.errors
-        return errors or 0
-
-    @property
-    def discards(self) -> int:
-        return 0
-
-    @property
-    def panics(self) -> int:
-        return 0
-
-    def stats_of(self, job: "MonteCarloJob") -> Stats:
-        return Stats(
-            stats=sinter.AnonTaskStats(
-                shots=job.shots,
-                errors=self.errors,
-                seconds=job.duration,
-            ),
-        )
 
 
 def default_json_filename(code: str, noise: str, decoder: str):

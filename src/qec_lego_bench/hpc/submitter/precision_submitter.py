@@ -33,7 +33,7 @@ class PrecisionSubmitter:
             ):
                 continue
             target_precision = self.target_precision
-            shots = max(job.shots, 1)
+            shots = max(job.shots, 10)
             if errors / shots > self.high_pL_threshold:
                 target_precision = self.high_pL_precision
             target_errors = precision_to_errors(target_precision)
@@ -47,7 +47,7 @@ class PrecisionSubmitter:
             if (
                 self.time_limit is not None
                 and job.finished_shots > 0
-                and (remaining_shots * job.duration_per_shot - job.duration)
+                and (remaining_shots * job.duration_per_shot + job.duration)
                 > self.time_limit
             ):
                 remaining_shots = math.ceil(

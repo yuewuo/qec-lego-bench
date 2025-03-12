@@ -1,6 +1,7 @@
 import arguably
 from qec_lego_bench.decoders.profiling_decoder import ProfilingDecoder
 from dataclasses import dataclass
+from dataclasses_json import dataclass_json
 import stim
 import tempfile
 from .util import *
@@ -102,6 +103,7 @@ def generate_samples(
         )
 
 
+@dataclass_json(undefined="RAISE")  # avoid accidentally override other types
 @dataclass
 class BenchmarkSamplesResult:
     elapsed: float
@@ -118,6 +120,7 @@ def benchmark_samples(
     predict_filename: str | None = None,
     compact_print: bool = False,
     no_print: bool = False,
+    remove_initialization_time: bool = False,
 ) -> BenchmarkSamplesResult:
     circuit_filename = filename + ".stim"
     dem_filename = filename + ".dem"
@@ -143,6 +146,21 @@ def benchmark_samples(
     assert obs_bytes % obs_bytes_per_shot == 0, "inconsistent byte size"
     assert shots * obs_bytes_per_shot == obs_bytes, "obs doesn't match det size"
 
+    if remove_initialization_time:
+        init_profiling_decoder = ProfilingDecoder(decoder_instance)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            predicts_path = Path(predict_filename or (tmp_dir + "/predicted.b8"))
+            init_profiling_decoder.decode_via_files(
+                num_shots=1,
+                num_dets=num_dets,
+                num_obs=num_obs,
+                dem_path=Path(dem_filename),
+                dets_b8_in_path=Path(det_filename),
+                obs_predictions_b8_out_path=predicts_path,
+                tmp_dir=Path(tmp_dir),
+            )
+        initialization_time = init_profiling_decoder.elapsed
+
     profiling_decoder = ProfilingDecoder(decoder_instance)
     num_shots = shots if max_shots is None else min(shots, max_shots)
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -167,6 +185,12 @@ def benchmark_samples(
         errors = num_shots - success
 
     elapsed = profiling_decoder.elapsed
+    if remove_initialization_time and num_shots > 1:
+        if elapsed > initialization_time:
+            elapsed -= initialization_time
+            # scale up because the initialization time includes the decoding time of 1 sample
+            elapsed *= num_shots / (num_shots - 1)
+
     decoding_time = elapsed / num_shots
 
     if compact_print and not no_print:

@@ -14,7 +14,7 @@ from typing import (
     ParamSpec,
 )
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
+from dataclasses_json import dataclass_json, config
 from distributed import (
     Future,
     Client,
@@ -61,7 +61,12 @@ Result = TypeVar("Result", bound=MonteCarloResult)
 class LogicalErrorResult(MonteCarloResult):
     errors: int = 0
     discards: int = 0
-    panic_cases: Optional[list[str]] = None
+    panic_cases: list[str] | None = field(
+        default=None, metadata=config(exclude=lambda x: x is None)
+    )
+    elapsed: float | None = field(
+        default=None, metadata=config(exclude=lambda x: x is None)
+    )
 
     @property
     def panics(self) -> int:
@@ -78,10 +83,17 @@ class LogicalErrorResult(MonteCarloResult):
                 panic_cases = list(other.panic_cases)
             else:
                 panic_cases.extend(other.panic_cases)
+        elapsed = self.elapsed
+        if other.elapsed is not None:
+            if elapsed is None:
+                elapsed = other.elapsed
+            else:
+                elapsed += other.elapsed
         return LogicalErrorResult(
             errors=self.errors + other.errors,
             discards=self.discards + other.discards,
             panic_cases=panic_cases,
+            elapsed=elapsed,
         )  # type: ignore
 
     def stats_of(self, job: "MonteCarloJob") -> Stats:
@@ -90,7 +102,7 @@ class LogicalErrorResult(MonteCarloResult):
                 shots=job.shots,
                 errors=self.errors,
                 discards=self.discards,
-                seconds=job.duration,
+                seconds=job.duration if self.elapsed is None else self.elapsed,
             ),
             panic_cases=self.panic_cases,
         )
