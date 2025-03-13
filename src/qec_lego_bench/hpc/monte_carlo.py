@@ -329,7 +329,9 @@ class SlurmClientConnector:
             print(e)
             from dask.distributed import Client, LocalCluster
 
-            cluster = LocalCluster(n_workers=self.local_maximum_jobs)
+            cluster = LocalCluster(
+                n_workers=self.local_maximum_jobs, threads_per_worker=1
+            )
         print("cluster dashboard link:", cluster.dashboard_link)
         client = Client(cluster)
         return client

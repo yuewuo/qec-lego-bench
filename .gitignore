@@ -16,3 +16,5 @@ tmp
 
 # papermilled jupyter notebooks
 zz-*
+*.jobout
+*.joberr

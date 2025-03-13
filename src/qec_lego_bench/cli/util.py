@@ -9,10 +9,11 @@ from enum import Enum
 def kwargs_of_qs(qs: str) -> dict[str, str]:
     """
     parsing a custom querystring format into a dictionary.
-    The format is normal querystring format, but with '&' replaced by ','.
-    Thus, the value cannot contain ',', which is usually fine in the context of this project.
+    The format is normal querystring format, but with '&' replaced by ',' or ';'.
+    Thus, the value cannot contain ',' or ';', which is usually fine in the context of this project.
+    Optionally, one can use '@' as an alias to '=' to avoid issues when '=' has special meanings (e.g. in papermill).
     """
-    querystring = qs.replace(",", "&")
+    querystring = qs.replace(",", "&").replace(";", "&").replace("@", "=")
     dict_of_qs = parse_qs(querystring)
     assert len(dict_of_qs) > 0 or qs == "", f"querystring '{qs}' is not valid"
     for key in dict_of_qs:

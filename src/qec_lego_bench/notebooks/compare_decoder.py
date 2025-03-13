@@ -160,6 +160,7 @@ class CompareDecoderPlotter:
         if pL_results is None:
             return
         best_pL: float | None = None
+        best_speed: float | None = None
         best_decoder: str | None = None
         x_vec = []
         y_vec = []
@@ -190,6 +191,10 @@ class CompareDecoderPlotter:
             # pL_array[i] = stats.failure_rate_value
             if best_pL is None or stats.failure_rate < best_pL:
                 best_pL = stats.failure_rate
+                best_speed = stats.speed
+                best_decoder = decoder
+            elif stats.failure_rate == best_pL and stats.speed > best_speed:
+                best_speed = stats.speed
                 best_decoder = decoder
         if best_decoder is None:
             return
