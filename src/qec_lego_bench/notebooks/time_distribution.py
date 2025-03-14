@@ -12,18 +12,22 @@ from qec_lego_bench.hpc.submitter import *
 from qec_lego_bench.hpc.plotter import *
 from qec_lego_bench.cli.generate_samples import generate_samples, benchmark_samples
 import tempfile
-from tqdm import tqdm
 import matplotlib as mpl
-from .common import MultiDecoderLogicalErrorRates
+from tqdm import tqdm
+from .common import (
+    DecodingTimeDistribution,
+    FloatLogDistribution,
+    parametrized_decoder_of,
+    MultiDecoderDecodingTimeDistribution,
+)
 
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
-compare_decoder_template = os.path.join(this_dir, "compare_decoder.ipynb")
-split = "none"
+time_distribution_template = os.path.join(this_dir, "time_distribution.ipynb")
 
 
 @arguably.command
-def notebook_compare_decoder(
+def notebook_time_distribution(
     notebook_filepath: str,
     code: CodeCli,
     *,
@@ -45,8 +49,8 @@ def notebook_compare_decoder(
     Generate and run a notebook that tunes the decoders for a given code, noise.
     """
     assert os.path.exists(
-        compare_decoder_template
-    ), f"Notebook file not found: {compare_decoder_template}"
+        time_distribution_template
+    ), f"Notebook file not found: {time_distribution_template}"
 
     if json_filename is None:
         json_filename = os.path.basename(notebook_filepath)
@@ -86,7 +90,7 @@ def notebook_compare_decoder(
     import papermill
 
     papermill.execute_notebook(
-        compare_decoder_template,
+        time_distribution_template,
         notebook_filepath,
         parameters=parameters,
         prepare_only=prepare_only,
@@ -96,16 +100,16 @@ def notebook_compare_decoder(
 
 
 def default_json_filename(code: str, noise: str):
-    return "z-compare-decoder." + slugify(code) + "." + slugify(noise) + ".json"
+    return "z-time-distribution." + slugify(code) + "." + slugify(noise) + ".json"
 
 
 @dataclass
-class CompareDecoderMonteCarloFunction:
+class TimeDistributionMonteCarloFunction:
     decoders: list[str]
 
     def __call__(
         self, shots: int, code: str, noise: str, verbose: bool = False
-    ) -> tuple[int, MultiDecoderLogicalErrorRates]:
+    ) -> tuple[int, MultiDecoderDecodingTimeDistribution]:
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             filename = os.path.join(tmp_dir, "tmp")
@@ -117,29 +121,33 @@ class CompareDecoderMonteCarloFunction:
                 decoder="none",
                 no_print=not verbose,
             )
+            results: dict[str, DecodingTimeDistribution] = {}
 
-            results: dict[str, LogicalErrorResult] = {}
             for decoder in tqdm(self.decoders, disable=not verbose):
-                if decoder == split:
-                    continue
+                trace_filename = os.path.join(tmp_dir, f"trace.{slugify(decoder)}.bin")
+
                 result = benchmark_samples(
                     filename=filename,
-                    decoder=decoder,
+                    decoder=parametrized_decoder_of(
+                        decoder, trace_filename=trace_filename
+                    ),
                     no_print=True,
-                    remove_initialization_time=True,
                 )
                 assert result.shots == shots
-                results[decoder] = LogicalErrorResult(
-                    errors=result.errors, elapsed=result.elapsed
-                )
 
-            return shots, MultiDecoderLogicalErrorRates(results=results)
+                distribution = DecodingTimeDistribution(
+                    result=LogicalErrorResult(
+                        errors=result.errors, elapsed=result.elapsed
+                    ),
+                    elapsed=FloatLogDistribution().load_trace(trace_filename),
+                )
+                results[decoder] = distribution
+
+            return (shots, MultiDecoderDecodingTimeDistribution(results=results))
 
 
 @dataclass
-class CompareDecoderPlotter:
-    decoders: list[str]
-
+class TimeDistributionPlotter:
     hdisplay: display.DisplayHandle = field(
         default_factory=lambda: display.display("", display_id=True)
     )
@@ -148,77 +156,35 @@ class CompareDecoderPlotter:
     def __call__(self, executor: MonteCarloJobExecutor):
         fig = self.fig
         fig.clear()
+        assert (
+            len(executor.jobs) == 1
+        ), "only one job is supported, since each job may have different plots"
+        job = list(executor)[0]
+        multi: MultiDecoderDecodingTimeDistribution | None = job.result
+        if multi is None or len(multi.results) == 0:
+            return
+        fig.set_size_inches(6, 4 * len(multi.results))
         axes = fig.subplots(
-            len(executor.jobs),
+            len(multi.results),
             1,
             squeeze=False,
+            gridspec_kw={"hspace": 0.3},
         )
-        for i, job in enumerate(executor):
+        for i, (decoder, distribution) in enumerate(multi.results.items()):
             ax = axes[i][0]
             ax.clear()
-            self.plot(job, ax=ax)
+            self.plot(decoder, distribution, ax=ax)
         self.hdisplay.update(fig)
 
-    def plot(self, job: MonteCarloJob, ax: Optional[mpl.axes.Axes] = None):
-        pL_results: MultiDecoderLogicalErrorRates | None = job.result
-        if pL_results is None:
-            return
-        best_pL: float | None = None
-        best_speed: float | None = None
-        best_decoder: str | None = None
-        x_vec = []
-        y_vec = []
-        previous_decoders: list[str] = []
-        for i, decoder in enumerate(self.decoders + ["none"]):
-            if decoder == split:
-                if len(previous_decoders) > 0:
-                    # plot the data
-                    ax.plot(
-                        x_vec,
-                        y_vec,
-                        label=decoder_list_label(previous_decoders),
-                        marker="o",
-                        markersize=5,
-                        linestyle="dotted",
-                    )
-                    x_vec = []
-                    y_vec = []
-                    previous_decoders = []
-                continue
-            pL: LogicalErrorResult = pL_results.results[decoder]
-            stats = pL.stats_of(job)
-            if stats.errors == 0:
-                continue
-            x_vec.append(stats.speed)
-            y_vec.append(1 / stats.failure_rate_value)
-            previous_decoders.append(decoder)
-            # pL_array[i] = stats.failure_rate_value
-            if best_pL is None or stats.failure_rate < best_pL:
-                best_pL = stats.failure_rate
-                best_speed = stats.speed
-                best_decoder = decoder
-            elif stats.failure_rate == best_pL and stats.speed > best_speed:
-                best_speed = stats.speed
-                best_decoder = decoder
-        if best_decoder is None:
-            return
-
-        ax.set_xlabel("speed ($s^{-1}$)")
+    def plot(
+        self, decoder: str, distribution: DecodingTimeDistribution, ax: mpl.axes.Axes
+    ):
+        x_vec, y_vec = distribution.elapsed.flatten()
+        ax.plot(x_vec, y_vec, ".-")
+        ax.set_xlabel("decoding time ($s$)")
         ax.set_xscale("log")
-        ax.set_ylabel("accuracy ($p_L^{-1}$)")
+        ax.set_ylabel("sample count")
         ax.set_yscale("log")
-        ax.title.set_text(f"best decoder: {best_decoder}, pL={best_pL:.2uS}")
-        ax.legend()
-
-
-def decoder_list_label(decoders: list[str]):
-    assert len(decoders) > 0
-    decoder = decoders[-1]
-    prefix = os.path.commonprefix(decoders)
-    suffix = os.path.commonprefix([x[::-1] for x in decoders])[::-1]
-    if len(suffix) + len(prefix) > len(decoder):
-        suffix = ""
-        variable = decoder[len(prefix) :]
-    else:
-        variable = decoder[len(prefix) : -len(suffix)]
-    return f"{prefix}..{variable}..{suffix}"
+        ax.title.set_text(
+            f"decoder: {decoder}, average={distribution.elapsed.average():.2e}(s)"
+        )

@@ -18,7 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib as mpl
-from .common import MultiDecoderLogicalErrorRates
+from .common import MultiDecoderLogicalErrorRates, parametrized_decoder_of
 
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -107,22 +107,6 @@ def default_json_filename(code: str, noise: str, decoder: str):
         + "."
         + slugify(decoder)
         + ".json"
-    )
-
-
-def parametrized_decoder_of(
-    decoder: str, max_iter: int, ms_scaling_factor: float
-) -> str:
-    if decoder[-1] == ")":
-        prefix = decoder[:-1] + ","
-    else:
-        prefix = decoder + "("
-    return (
-        prefix
-        + f"max_iter={max_iter}"
-        + ","
-        + f"ms_scaling_factor={ms_scaling_factor}"
-        + ")"
     )
 
 
@@ -219,7 +203,7 @@ class BPTunerPlotter:
 
         with np.errstate(divide="ignore"):
             accuracy_array = 1 / pL_array
-            accuracy_array[pL_array == 0] = 0
+            accuracy_array[pL_array == 0] = 1 / best_pL  # temporary
 
         if ax is None:
             fig, ax = plt.subplots(subplot_kw={"projection": "3d"})

@@ -33,6 +33,8 @@ class BPOSD(sinter.Decoder):
 
     osd_order: int = 0  # The OSD order
 
+    # modified ldpc package at https://github.com/yuewuo/ldpc
+    # format: 4 f32s for each iteration: elapsed, posterior_weight, prior_weight
     trace_filename: Optional[str] = None
 
     def decode_via_files(

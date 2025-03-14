@@ -36,6 +36,8 @@ class BPUF(sinter.Decoder):
     # Specifies the number of bits added to the cluster in each step of the UFD algorithm. If no value is provided, this is set the block length of the code.
     bits_per_step: int = 0
 
+    # modified ldpc package at https://github.com/yuewuo/ldpc
+    # format: 4 f32s for each iteration: elapsed, posterior_weight, prior_weight
     trace_filename: Optional[str] = None
 
     def decode_via_files(
