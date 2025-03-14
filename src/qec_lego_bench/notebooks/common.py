@@ -18,7 +18,7 @@ def parametrized_decoder_of(decoder: str, **kwargs) -> str:
 
 @dataclass_json(undefined="RAISE")  # avoid accidentally override other types
 @dataclass
-class MultiDecoderLogicalErrorRates(MonteCarloResult):
+class MultiDecoderLogicalErrorRates:  # MonteCarloResult
     results: dict[str, LogicalErrorResult] = field(default_factory=dict)
 
     def __add__(
@@ -61,7 +61,7 @@ class MultiDecoderLogicalErrorRates(MonteCarloResult):
 
 @dataclass_json(undefined="RAISE")  # avoid accidentally override other types
 @dataclass
-class FloatLogDistribution(MonteCarloResult):
+class FloatLogDistribution:  # MonteCarloResult
     lower: float = 1e-12
     upper: float = 1e12
     N: int = 4800
@@ -84,6 +84,7 @@ class FloatLogDistribution(MonteCarloResult):
             "<lower>([\+-e\d\.]+)<upper>([\+-e\d\.]+)<N>(\d+)((?:\[\d+\]\d+)*)\[underflow\](\d+)\[overflow\](\d+)",
             line,
         )
+        assert match is not None
         lower = float(match.group(1))
         upper = float(match.group(2))
         N = int(match.group(3))
@@ -177,7 +178,7 @@ class FloatLogDistribution(MonteCarloResult):
         return sum(self.counter.values()) + self.underflow_count + self.overflow_count
 
     def average(self) -> float:
-        sum_value = 0
+        sum_value = 0.0
         for index in self.counter.keys():
             sum_value += self.counter[index] * self.value_of(index)
         return sum_value / self.count_records()
@@ -265,11 +266,12 @@ class FloatLogDistribution(MonteCarloResult):
             accumulated += y_vec[idx]
             if accumulated >= cut_off_count:
                 return x_vec[idx + 1]
+        return x_vec[0]
 
 
 @dataclass_json(undefined="RAISE")  # avoid accidentally override other types
 @dataclass
-class DecodingTimeDistribution(MonteCarloResult):
+class DecodingTimeDistribution:  # MonteCarloResult
     elapsed: FloatLogDistribution = field(default_factory=FloatLogDistribution)
     result: LogicalErrorResult = field(default_factory=LogicalErrorResult)
 
@@ -303,7 +305,7 @@ class DecodingTimeDistribution(MonteCarloResult):
 
 @dataclass_json(undefined="RAISE")  # avoid accidentally override other types
 @dataclass
-class MultiDecoderDecodingTimeDistribution(MonteCarloResult):
+class MultiDecoderDecodingTimeDistribution:  # MonteCarloResult
     results: dict[str, DecodingTimeDistribution] = field(default_factory=dict)
 
     def __add__(

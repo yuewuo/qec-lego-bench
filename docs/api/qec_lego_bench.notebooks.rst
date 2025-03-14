@@ -28,6 +28,14 @@ qec\_lego\_bench.notebooks.compare\_decoder module
    :undoc-members:
    :show-inheritance:
 
+qec\_lego\_bench.notebooks.time\_distribution module
+----------------------------------------------------
+
+.. automodule:: qec_lego_bench.notebooks.time_distribution
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

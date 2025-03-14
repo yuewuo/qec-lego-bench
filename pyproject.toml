@@ -21,6 +21,8 @@ module = [
     "hjson.*",
     "dotmap.*",
     "dask_jobqueue.*",
+    "papermill",
+    "mpl_toolkits.*",
 ]
 follow_untyped_imports = true
 ignore_missing_imports = true

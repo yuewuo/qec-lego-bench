@@ -62,7 +62,7 @@ def notebook_time_distribution(
 
     assert decoder is not None, "please provide a list of decoders"
 
-    parameters = {
+    parameters: dict[str, Any] = {
         "code": str(code).replace("=", "@"),
         "noise": str(noise).replace("=", "@"),
         "decoders": [
@@ -160,7 +160,7 @@ class TimeDistributionPlotter:
             len(executor.jobs) == 1
         ), "only one job is supported, since each job may have different plots"
         job = list(executor)[0]
-        multi: MultiDecoderDecodingTimeDistribution | None = job.result
+        multi = cast(MultiDecoderDecodingTimeDistribution | None, job.result)
         if multi is None or len(multi.results) == 0:
             return
         fig.set_size_inches(6, 4 * len(multi.results))

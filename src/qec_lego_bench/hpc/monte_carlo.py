@@ -58,7 +58,7 @@ Result = TypeVar("Result", bound=MonteCarloResult)
 
 @dataclass_json(undefined="RAISE")  # avoid accidentally override other types
 @dataclass
-class LogicalErrorResult(MonteCarloResult):
+class LogicalErrorResult:  # MonteCarloResult
     errors: int = 0
     discards: int = 0
     panic_cases: list[str] | None = field(
@@ -348,7 +348,7 @@ class MonteCarloJobExecutor:
             str
         ] = None,  # hjson file to store the panic information
         # used when reading from file
-        result_type: Type[MonteCarloResult] = LogicalErrorResult,
+        result_type: Type[MonteCarloResult] = LogicalErrorResult,  # type: ignore
     ) -> None:
         assert callable(func)
         config = config or MonteCarloExecutorConfig()

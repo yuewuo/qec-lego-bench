@@ -18,6 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib as mpl
+from mpl_toolkits.mplot3d import axes3d
 from .common import MultiDecoderLogicalErrorRates, parametrized_decoder_of
 
 
@@ -60,7 +61,7 @@ def notebook_bp_tuner(
         "max_iter" not in decoder.kwargs
     ), "we will iterate over a list of max_iter, please provide it via --max-iter .."
 
-    parameters = {
+    parameters: dict[str, Any] = {
         "code": str(code).replace("=", "@"),
         "noise": str(noise).replace("=", "@"),
         "decoder": str(decoder).replace("=", "@"),
@@ -174,9 +175,9 @@ class BPTunerPlotter:
             self.plot(job, ax=ax)
         self.hdisplay.update(fig)
 
-    def plot(self, job: MonteCarloJob, ax: Optional[mpl.axes.Axes] = None):
+    def plot(self, job: MonteCarloJob, ax: axes3d.Axes3D):
         decoder: str = job.kwargs["decoder"]
-        pL_results: MultiDecoderLogicalErrorRates | None = job.result
+        pL_results = cast(MultiDecoderLogicalErrorRates | None, job.result)
         if pL_results is None:
             return
         pL_array: np.ndarray = np.zeros(
@@ -198,29 +199,28 @@ class BPTunerPlotter:
                 if best_pL is None or stats.failure_rate < best_pL:
                     best_pL = stats.failure_rate
                     best_config = (max_iter, ms_scaling_factor)
-        if best_config is None:
+        if best_config is None or best_pL is None:
             return
 
         with np.errstate(divide="ignore"):
             accuracy_array = 1 / pL_array
             accuracy_array[pL_array == 0] = 1 / best_pL  # temporary
 
-        if ax is None:
-            fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
         X, Y = np.meshgrid(
             # list(range(len(self.max_iter_choices))),
             [np.log(max_iter) / np.log(10) for max_iter in self.max_iter_choices],
             # self.max_iter_choices,
             self.ms_scaling_factor_choices,
         )
+        cmap = cm.coolwarm  # type: ignore
         surface = ax.plot_surface(
-            X, Y, accuracy_array.T, cmap=cm.coolwarm, linewidth=0, antialiased=True
+            X, Y, accuracy_array.T, cmap=cmap, linewidth=0, antialiased=True
         )
         wireframe = ax.plot_wireframe(
             X, Y, accuracy_array.T, linewidth=0.3, color="black"
         )
 
-        ax.set_zscale("log")
+        ax.set_zscale("log")  # type: ignore
         ax.set_xticks([0, 1, 2, 3], ["1", "10", "100", "1000"])
         ax.set_xlabel("max_iter")
         ax.set_ylabel("ms_scaling_factor")

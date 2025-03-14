@@ -58,7 +58,7 @@ def notebook_compare_decoder(
 
     assert decoder is not None, "please provide a list of decoders"
 
-    parameters = {
+    parameters: dict[str, Any] = {
         "code": str(code).replace("=", "@"),
         "noise": str(noise).replace("=", "@"),
         "decoders": [
@@ -159,15 +159,15 @@ class CompareDecoderPlotter:
             self.plot(job, ax=ax)
         self.hdisplay.update(fig)
 
-    def plot(self, job: MonteCarloJob, ax: Optional[mpl.axes.Axes] = None):
-        pL_results: MultiDecoderLogicalErrorRates | None = job.result
+    def plot(self, job: MonteCarloJob, ax: mpl.axes.Axes):
+        pL_results = cast(MultiDecoderLogicalErrorRates | None, job.result)
         if pL_results is None:
             return
         best_pL: float | None = None
         best_speed: float | None = None
         best_decoder: str | None = None
-        x_vec = []
-        y_vec = []
+        x_vec: list[float] = []
+        y_vec: list[float] = []
         previous_decoders: list[str] = []
         for i, decoder in enumerate(self.decoders + ["none"]):
             if decoder == split:
@@ -197,7 +197,11 @@ class CompareDecoderPlotter:
                 best_pL = stats.failure_rate
                 best_speed = stats.speed
                 best_decoder = decoder
-            elif stats.failure_rate == best_pL and stats.speed > best_speed:
+            elif (
+                stats.failure_rate == best_pL
+                and best_speed is not None
+                and stats.speed > best_speed
+            ):
                 best_speed = stats.speed
                 best_decoder = decoder
         if best_decoder is None:
