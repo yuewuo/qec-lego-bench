@@ -173,11 +173,15 @@ class TimeDistributionPlotter:
         for i, (decoder, distribution) in enumerate(multi.results.items()):
             ax = axes[i][0]
             ax.clear()
-            self.plot(decoder, distribution, ax=ax)
+            self.plot(decoder, distribution, job, ax=ax)
         self.hdisplay.update(fig)
 
     def plot(
-        self, decoder: str, distribution: DecodingTimeDistribution, ax: mpl.axes.Axes
+        self,
+        decoder: str,
+        distribution: DecodingTimeDistribution,
+        job: MonteCarloJob,
+        ax: mpl.axes.Axes,
     ):
         x_vec, y_vec = distribution.elapsed.flatten()
         ax.plot(x_vec, y_vec, ".-")
@@ -185,6 +189,8 @@ class TimeDistributionPlotter:
         ax.set_xscale("log")
         ax.set_ylabel("sample count")
         ax.set_yscale("log")
+        pL: LogicalErrorResult = distribution.result
+        stats = pL.stats_of(job)
         ax.title.set_text(
-            f"decoder: {decoder}, average={distribution.elapsed.average():.2e}(s)"
+            f"{decoder}: L={distribution.elapsed.average():.2e}(s), $p_L$={stats.failure_rate:.2uS}"
         )
