@@ -14,12 +14,7 @@ from qec_lego_bench.cli.generate_samples import generate_samples, benchmark_samp
 import tempfile
 import matplotlib as mpl
 from tqdm import tqdm
-from .common import (
-    DecodingTimeDistribution,
-    FloatLogDistribution,
-    parametrized_decoder_of,
-    MultiDecoderDecodingTimeDistribution,
-)
+from .common import *
 
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -44,6 +39,10 @@ def notebook_time_distribution(
     slurm_mem_per_job: int | None = None,
     slurm_extra: dict | None = None,
     local_maximum_jobs: int | None = None,
+    srun: bool = False,
+    srun_prefix: str = DEFAULT_SRUN_PREFIX,
+    srun_suffix: str = DEFAULT_SRUN_SUFFIX,
+    srun_wait: bool = False,  # if not wait, output to jobout and joberr
 ):
     """
     Generate and run a notebook that tunes the decoders for a given code, noise.
@@ -53,12 +52,10 @@ def notebook_time_distribution(
     ), f"Notebook file not found: {time_distribution_template}"
 
     if json_filename is None:
-        json_filename = os.path.basename(notebook_filepath)
-        if json_filename.endswith(".ipynb"):
-            json_filename = json_filename[: -len(".ipynb")]
-        json_filename += "." + slugify(str(code))
-        json_filename += "." + slugify(str(noise))
-        json_filename += ".json"
+        basename = os.path.basename(notebook_filepath)
+        if basename.endswith(".ipynb"):
+            basename = basename[: -len(".ipynb")]
+        json_filename = default_json_filename(code=code, noise=noise, basename=basename)
 
     assert decoder is not None, "please provide a list of decoders"
 
@@ -87,20 +84,23 @@ def notebook_time_distribution(
     if local_maximum_jobs is not None:
         parameters["local_maximum_jobs"] = local_maximum_jobs
 
-    import papermill
-
-    papermill.execute_notebook(
+    papermill_execute_notebook(
         time_distribution_template,
         notebook_filepath,
         parameters=parameters,
         prepare_only=prepare_only,
-        progress_bar=not no_progress_bar,
-        cwd=os.path.dirname(os.path.abspath(notebook_filepath)),
+        no_progress_bar=no_progress_bar,
+        srun=srun,
+        srun_prefix=srun_prefix,
+        srun_suffix=srun_suffix,
+        srun_wait=srun_wait,
     )
 
 
-def default_json_filename(code: str, noise: str):
-    return "z-time-distribution." + slugify(code) + "." + slugify(noise) + ".json"
+def default_json_filename(
+    code: str, noise: str, basename: str = "z-time-distribution"
+) -> str:
+    return f"{basename}.{slugify(str(code))}.{slugify(str(noise))}.json"
 
 
 @dataclass

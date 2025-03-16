@@ -9,3 +9,6 @@ examples:
 
 rsc-p0005:
 	python3 -m qec_lego_bench notebook-time-distribution rsc-d5-p0005-$(CPU).ipynb 'rsc(d=5,p=0.0005)' $(EXAMPLE_DECODERS) --target-precision $(TARGET_PRECISION) --local-maximum-jobs $(JOBS) $(EXTRA)
+
+rsc-p0003:
+	python3 -m qec_lego_bench notebook-time-distribution rsc-d5-p0003-$(CPU).ipynb 'rsc(d=5,p=0.0003)' $(EXAMPLE_DECODERS) --decoder 'mwpf(c=1000)' --target-precision $(TARGET_PRECISION) --local-maximum-jobs $(JOBS) $(EXTRA)

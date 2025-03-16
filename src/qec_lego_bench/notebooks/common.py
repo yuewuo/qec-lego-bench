@@ -4,6 +4,7 @@ from qec_lego_bench.hpc.monte_carlo import MonteCarloResult, LogicalErrorResult
 from qec_lego_bench.hpc.monte_carlo import *
 import re
 import numpy as np
+import subprocess
 
 
 def parametrized_decoder_of(decoder: str, **kwargs) -> str:
@@ -344,3 +345,55 @@ class MultiDecoderDecodingTimeDistribution:  # MonteCarloResult
                 seconds=job.duration,
             ),
         )
+
+
+DEFAULT_SRUN_PREFIX: str = "srun --time=1-00:00:00 --mem=10G --cpus-per-task=2"
+DEFAULT_SRUN_SUFFIX: str = ""
+
+
+def papermill_execute_notebook(
+    template_filepath: str,
+    notebook_filepath: str,
+    parameters: dict[str, Any],
+    prepare_only: bool = False,
+    no_progress_bar: bool = False,
+    srun: bool = False,
+    srun_prefix: str = DEFAULT_SRUN_PREFIX,
+    srun_suffix: str = DEFAULT_SRUN_SUFFIX,
+    srun_wait: bool = False,  # if not wait, output to jobout and joberr
+):
+    import papermill
+
+    cwd = os.path.dirname(os.path.abspath(notebook_filepath))
+    papermill.execute_notebook(
+        template_filepath,
+        notebook_filepath,
+        parameters=parameters,
+        prepare_only=prepare_only or srun,
+        progress_bar=not no_progress_bar,
+        cwd=cwd,
+    )
+
+    if srun and not prepare_only:
+        command = (
+            srun_prefix
+            + f" papermill {notebook_filepath} {notebook_filepath} "
+            + srun_suffix
+        )
+        print("[popen]", command)
+        stdout = sys.stdout if srun_wait else open(f"{notebook_filepath}.jobout", "a")
+        stderr = sys.stderr if srun_wait else open(f"{notebook_filepath}.joberr", "a")
+        process = subprocess.Popen(
+            command,
+            shell=True,
+            universal_newlines=True,
+            stdout=stdout,
+            stderr=stderr,
+            cwd=cwd,
+            start_new_session=not srun_wait,
+        )
+        if srun_wait:
+            process.wait()
+        else:
+            stdout.write(f"[popen] pid={process.pid}\n")
+            stderr.write(f"[popen] pid={process.pid}\n")

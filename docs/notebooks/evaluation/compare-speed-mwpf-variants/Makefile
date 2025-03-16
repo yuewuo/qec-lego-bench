@@ -26,8 +26,9 @@ RSC_OSD_ORDER_VEC := 0 1 3 10  # because  1 ~ 10 doesn't change much
 RSC_OSD_DECODERS := $(foreach order,$(RSC_OSD_ORDER_VEC),--decoder 'bposd(max_iter=5;ms_scaling_factor=0.4;osd_order=$(order);osd_method=cs)')
 RSC_BP_MWPF_DECODERS := $(foreach c,$(C_VEC),--decoder 'mwpf(c=$(c);bp=1;max_iter=5;ms_scaling_factor=0.4)')
 RSC_DECODERS := $(ALL_MWPF_DECODERS) $(SPLIT) $(RSC_OSD_DECODERS) $(SPLIT) $(RSC_BP_MWPF_DECODERS)
+RSC_p := 0.001
 rsc:
-	python3 -m qec_lego_bench notebook-compare-decoder rsc-$(CPU).ipynb 'rsc(d=5,p=0.001)' $(RSC_DECODERS) --target-precision $(TARGET_PRECISION) --local-maximum-jobs $(JOBS) $(EXTRA)
+	python3 -m qec_lego_bench notebook-compare-decoder rsc-$(CPU).ipynb 'rsc(d=5,p=$(RSC_p))' $(RSC_DECODERS) --target-precision $(TARGET_PRECISION) --local-maximum-jobs $(JOBS) $(EXTRA)
 
 REP_OSD_DECODERS := $(foreach order,$(OSD_ORDER_VEC),--decoder 'bposd(max_iter=50;ms_scaling_factor=0.9;osd_order=$(order);osd_method=cs)')
 REP_BP_MWPF_DECODERS := $(foreach c,$(C_VEC),--decoder 'mwpf(c=$(c);bp=1;max_iter=50;ms_scaling_factor=0.9)')

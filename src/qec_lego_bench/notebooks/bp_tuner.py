@@ -19,7 +19,8 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import axes3d
-from .common import MultiDecoderLogicalErrorRates, parametrized_decoder_of
+from .common import *
+from uncertainties import Variable as UFloat
 
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -45,6 +46,10 @@ def notebook_bp_tuner(
     slurm_extra: dict | None = None,
     ms_scaling_factor_choices: list[float] | None = None,
     max_iter_choices: list[int] | None = None,
+    srun: bool = False,
+    srun_prefix: str = DEFAULT_SRUN_PREFIX,
+    srun_suffix: str = DEFAULT_SRUN_SUFFIX,
+    srun_wait: bool = False,  # if not wait, output to jobout and joberr
 ):
     """
     Generate and run a notebook that tunes the BP decoder for a given code, noise and decoder.
@@ -60,6 +65,14 @@ def notebook_bp_tuner(
     assert (
         "max_iter" not in decoder.kwargs
     ), "we will iterate over a list of max_iter, please provide it via --max-iter .."
+
+    if json_filename is None:
+        basename = os.path.basename(notebook_filepath)
+        if basename.endswith(".ipynb"):
+            basename = basename[: -len(".ipynb")]
+        json_filename = default_json_filename(
+            code=code, noise=noise, decoder=decoder, basename=basename
+        )
 
     parameters: dict[str, Any] = {
         "code": str(code).replace("=", "@"),
@@ -87,28 +100,23 @@ def notebook_bp_tuner(
     if max_iter_choices is not None and len(max_iter_choices) > 0:
         parameters["max_iter_choices"] = max_iter_choices
 
-    import papermill
-
-    papermill.execute_notebook(
+    papermill_execute_notebook(
         bp_tuner_template,
         notebook_filepath,
         parameters=parameters,
         prepare_only=prepare_only,
-        progress_bar=not no_progress_bar,
-        cwd=os.path.dirname(os.path.abspath(notebook_filepath)),
+        no_progress_bar=no_progress_bar,
+        srun=srun,
+        srun_prefix=srun_prefix,
+        srun_suffix=srun_suffix,
+        srun_wait=srun_wait,
     )
 
 
-def default_json_filename(code: str, noise: str, decoder: str):
-    return (
-        "z-bp-tuner."
-        + slugify(code)
-        + "."
-        + slugify(noise)
-        + "."
-        + slugify(decoder)
-        + ".json"
-    )
+def default_json_filename(
+    code: str, noise: str, decoder: str, basename: str = "z-bp-tuner"
+):
+    return f"{basename}.{slugify(str(code))}.{slugify(str(noise))}.{slugify(str(decoder))}.json"
 
 
 @dataclass
@@ -184,7 +192,7 @@ class BPTunerPlotter:
             (len(self.max_iter_choices), len(self.ms_scaling_factor_choices)),
             dtype=float,
         )
-        best_pL: float | None = None
+        best_pL: UFloat | None = None
         best_config: tuple[int, float] | None = None
         for i, max_iter in enumerate(self.max_iter_choices):
             for j, ms_scaling_factor in enumerate(self.ms_scaling_factor_choices):
@@ -199,12 +207,12 @@ class BPTunerPlotter:
                 if best_pL is None or stats.failure_rate < best_pL:
                     best_pL = stats.failure_rate
                     best_config = (max_iter, ms_scaling_factor)
-        if best_config is None or best_pL is None:
+        if best_config is None or best_pL is None or best_pL.nominal_value == 0:
             return
 
         with np.errstate(divide="ignore"):
             accuracy_array = 1 / pL_array
-            accuracy_array[pL_array == 0] = 1 / best_pL  # temporary
+            accuracy_array[pL_array == 0] = best_pL.nominal_value  # temporary
 
         X, Y = np.meshgrid(
             # list(range(len(self.max_iter_choices))),

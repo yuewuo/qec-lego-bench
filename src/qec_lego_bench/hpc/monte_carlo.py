@@ -286,7 +286,7 @@ class SlurmClientConnector:
     slurm_cores_per_node: int = 10
     slurm_mem_per_job: int = 4  # GB
     slurm_extra: dict[str, str] = field(default_factory=DefaultSlurmExtra.scavenge)
-    local_maximum_jobs: int = field(default_factory=multiprocessing.cpu_count)
+    local_maximum_jobs: int | None = None
     print_job_script: bool = True  # for easier debugging
 
     use_adaptive_scaling: bool = False  # not well tested
@@ -330,7 +330,8 @@ class SlurmClientConnector:
             from dask.distributed import Client, LocalCluster
 
             cluster = LocalCluster(
-                n_workers=self.local_maximum_jobs, threads_per_worker=1
+                n_workers=self.local_maximum_jobs or multiprocessing.cpu_count(),
+                threads_per_worker=1,
             )
         print("cluster dashboard link:", cluster.dashboard_link)
         client = Client(cluster)

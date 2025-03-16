@@ -39,3 +39,18 @@ tmux new-session -d -s bp-tuner-c50 "srun --time=1-00:00:00 --mem=10G --cpus-per
 
 tmux new-session -d -s bp-tuner-c200 "srun --time=1-00:00:00 --mem=10G --cpus-per-task=2 python3 -m qec_lego_bench notebook-bp-tuner ./rsc-d5-p001-mwpf-c200.ipynb 'rsc(d=5,p=0.001)' --slurm-maximum-jobs 100 --max-cpu-hours 200 --decoder 'mwpf(c=200,bp=1)'"
 ```
+
+
+## 2025.3.15
+
+We also need to run d=7
+
+```sh
+nohup srun --time=1-00:00:00 --mem=10G --cpus-per-task=2 python3 -m qec_lego_bench notebook-bp-tuner ./rsc-d7-p001.ipynb 'rsc(d=7,p=0.001)' --slurm-maximum-jobs 200 > rsc-d7-p001.jobout &
+
+nohup srun --time=1-00:00:00 --mem=10G --cpus-per-task=2 python3 -m qec_lego_bench notebook-bp-tuner ./rsc-d7-p001-osd10.ipynb 'rsc(d=7,p=0.001)' --slurm-maximum-jobs 200 --decoder 'bposd(osd_order=10,osd_method=cs)' > rsc-d7-p001-osd10.jobout &
+
+nohup srun --time=1-00:00:00 --mem=10G --cpus-per-task=2 python3 -m qec_lego_bench notebook-bp-tuner ./rsc-d7-p0005.ipynb 'rsc(d=7,p=0.0005)' --slurm-maximum-jobs 200 > rsc-d7-p0005.jobout &
+
+nohup srun --time=1-00:00:00 --mem=10G --cpus-per-task=2 python3 -m qec_lego_bench notebook-bp-tuner ./rsc-d7-p0005-osd10.ipynb 'rsc(d=7,p=0.0005)' --slurm-maximum-jobs 200 --decoder 'bposd(osd_order=10,osd_method=cs)' > rsc-d7-p0005-osd10.jobout &
+```
