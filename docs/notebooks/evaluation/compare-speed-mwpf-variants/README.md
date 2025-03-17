@@ -28,3 +28,11 @@ nohup srun --time=1-00:00:00 --mem=10G --cpus-per-task=2 make rsc CPU=unknown2-p
 nohup srun --time=1-00:00:00 --mem=10G --cpus-per-task=2 make rsc CPU=unknown2-p0005 RSC_p=0.0005 EXTRA="--slurm-maximum-jobs 200" > unknown2-p0005.jobout &
 nohup srun --time=1-00:00:00 --mem=10G --cpus-per-task=2 make rsc CPU=unknown2-p0003 RSC_p=0.0003 EXTRA="--slurm-maximum-jobs 200" > unknown2-p0003.jobout &
 ```
+
+
+## 2025.3.15
+
+```sh
+make rsc_d CPU=unknown2-p001 RSC_d=7 RSC_p=0.001 EXTRA="--slurm-maximum-jobs 500 --srun"
+make rsc_d CPU=unknown2-p0005 RSC_d=7 RSC_p=0.0005 EXTRA="--slurm-maximum-jobs 500 --srun"
+```

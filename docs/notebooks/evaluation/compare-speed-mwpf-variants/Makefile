@@ -30,6 +30,10 @@ RSC_p := 0.001
 rsc:
 	python3 -m qec_lego_bench notebook-compare-decoder rsc-$(CPU).ipynb 'rsc(d=5,p=$(RSC_p))' $(RSC_DECODERS) --target-precision $(TARGET_PRECISION) --local-maximum-jobs $(JOBS) $(EXTRA)
 
+RSC_d := 5
+rsc_d:
+	python3 -m qec_lego_bench notebook-compare-decoder rsc_d$(RSC_d)-$(CPU).ipynb 'rsc(d=$(RSC_d),p=$(RSC_p))' $(MWPF_DECODERS) $(SPLIT) $(RSC_OSD_DECODERS) --target-precision $(TARGET_PRECISION) --local-maximum-jobs $(JOBS) $(EXTRA)
+
 REP_OSD_DECODERS := $(foreach order,$(OSD_ORDER_VEC),--decoder 'bposd(max_iter=50;ms_scaling_factor=0.9;osd_order=$(order);osd_method=cs)')
 REP_BP_MWPF_DECODERS := $(foreach c,$(C_VEC),--decoder 'mwpf(c=$(c);bp=1;max_iter=50;ms_scaling_factor=0.9)')
 REP_DECODERS := $(ALL_MWPF_DECODERS) $(SPLIT) $(REP_OSD_DECODERS) $(SPLIT) $(REP_BP_MWPF_DECODERS)

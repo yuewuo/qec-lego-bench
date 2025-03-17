@@ -381,15 +381,17 @@ def papermill_execute_notebook(
             + srun_suffix
         )
         print("[popen]", command)
-        stdout = sys.stdout if srun_wait else open(f"{notebook_filepath}.jobout", "a")
-        stderr = sys.stderr if srun_wait else open(f"{notebook_filepath}.joberr", "a")
+        stdout = sys.stdout if srun_wait else open(f"z.{notebook_filepath}.jobout", "a")
+        stderr = sys.stderr if srun_wait else open(f"z.{notebook_filepath}.joberr", "a")
         process = subprocess.Popen(
             command,
             shell=True,
             universal_newlines=True,
+            stdin=subprocess.DEVNULL,
             stdout=stdout,
             stderr=stderr,
             cwd=cwd,
+            close_fds=True,
             start_new_session=not srun_wait,
         )
         if srun_wait:

@@ -46,11 +46,11 @@ tmux new-session -d -s bp-tuner-c200 "srun --time=1-00:00:00 --mem=10G --cpus-pe
 We also need to run d=7
 
 ```sh
-nohup srun --time=1-00:00:00 --mem=10G --cpus-per-task=2 python3 -m qec_lego_bench notebook-bp-tuner ./rsc-d7-p001.ipynb 'rsc(d=7,p=0.001)' --slurm-maximum-jobs 200 > rsc-d7-p001.jobout &
+python3 -m qec_lego_bench notebook-bp-tuner ./rsc-d7-p001.ipynb 'rsc(d=7,p=0.001)' --slurm-maximum-jobs 200 --target-job-time 1000 --srun
 
-nohup srun --time=1-00:00:00 --mem=10G --cpus-per-task=2 python3 -m qec_lego_bench notebook-bp-tuner ./rsc-d7-p001-osd10.ipynb 'rsc(d=7,p=0.001)' --slurm-maximum-jobs 200 --decoder 'bposd(osd_order=10,osd_method=cs)' > rsc-d7-p001-osd10.jobout &
+python3 -m qec_lego_bench notebook-bp-tuner ./rsc-d7-p001-osd10.ipynb 'rsc(d=7,p=0.001)' --slurm-maximum-jobs 200 --target-job-time 1000 --decoder 'bposd(osd_order=10,osd_method=cs)' --srun
 
-nohup srun --time=1-00:00:00 --mem=10G --cpus-per-task=2 python3 -m qec_lego_bench notebook-bp-tuner ./rsc-d7-p0005.ipynb 'rsc(d=7,p=0.0005)' --slurm-maximum-jobs 200 > rsc-d7-p0005.jobout &
+python3 -m qec_lego_bench notebook-bp-tuner ./rsc-d7-p0005.ipynb 'rsc(d=7,p=0.0005)' --slurm-maximum-jobs 200 --target-job-time 1000 --srun
 
-nohup srun --time=1-00:00:00 --mem=10G --cpus-per-task=2 python3 -m qec_lego_bench notebook-bp-tuner ./rsc-d7-p0005-osd10.ipynb 'rsc(d=7,p=0.0005)' --slurm-maximum-jobs 200 --decoder 'bposd(osd_order=10,osd_method=cs)' > rsc-d7-p0005-osd10.jobout &
+python3 -m qec_lego_bench notebook-bp-tuner ./rsc-d7-p0005-osd10.ipynb 'rsc(d=7,p=0.0005)' --slurm-maximum-jobs 200 --target-job-time 1000 --decoder 'bposd(osd_order=10,osd_method=cs)' --srun
 ```

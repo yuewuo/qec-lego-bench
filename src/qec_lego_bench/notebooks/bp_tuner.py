@@ -44,6 +44,7 @@ def notebook_bp_tuner(
     slurm_cores_per_node: int | None = None,
     slurm_mem_per_job: int | None = None,
     slurm_extra: dict | None = None,
+    target_job_time: float | None = None,
     ms_scaling_factor_choices: list[float] | None = None,
     max_iter_choices: list[int] | None = None,
     srun: bool = False,
@@ -95,6 +96,8 @@ def notebook_bp_tuner(
         parameters["slurm_mem_per_job"] = slurm_mem_per_job
     if slurm_extra is not None:
         parameters["slurm_extra"] = slurm_extra
+    if target_job_time is not None:
+        parameters["target_job_time"] = target_job_time
     if ms_scaling_factor_choices is not None and len(ms_scaling_factor_choices) > 0:
         parameters["ms_scaling_factor_choices"] = ms_scaling_factor_choices
     if max_iter_choices is not None and len(max_iter_choices) > 0:
