@@ -33,6 +33,10 @@ class BPOSD(sinter.Decoder):
 
     osd_order: int = 0  # The OSD order
 
+    # by default BP may converge and directly return the result;
+    # sometimes it's better if BP cannot directly return and always use the post-processing to decode
+    bp_converge: bool = True
+
     # modified ldpc package at https://github.com/yuewuo/ldpc
     # format: 4 f32s for each iteration: elapsed, posterior_weight, prior_weight
     trace_filename: Optional[str] = None
@@ -63,6 +67,11 @@ class BPOSD(sinter.Decoder):
                 decoder, "trace_filename"
             ), "please use custom version of bposd at https://github.com/yuewuo/ldpc"
             decoder.trace_filename = self.trace_filename
+        if not self.bp_converge:
+            assert hasattr(
+                decoder, "bp_converge"
+            ), "please use custom version of bposd at https://github.com/yuewuo/ldpc"
+            decoder.bp_converge = self.bp_converge
         return decoder.decode_via_files(
             num_shots=num_shots,
             num_dets=num_dets,
