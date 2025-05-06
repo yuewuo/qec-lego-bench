@@ -118,12 +118,23 @@ class CompareDecoderMonteCarloFunction:
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             filename = os.path.join(tmp_dir, "tmp")
+
+            # check if any decoder requires decomposing errors, if so, use that decoder
+            representative_decoder: str = "none"
+            for decoder in self.decoders:
+                if decoder == split:
+                    continue
+                decoder_instance = DecoderCli(decoder)
+                if decoder_instance.decompose_errors:
+                    representative_decoder = decoder
+                    break
+
             generate_samples(
                 code=code,
                 filename=filename,
                 noise=noise,
                 shots=shots,
-                decoder="none",
+                decoder=representative_decoder,
                 no_print=not verbose,
             )
 

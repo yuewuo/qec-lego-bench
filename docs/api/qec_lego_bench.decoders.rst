@@ -44,6 +44,14 @@ qec\_lego\_bench.decoders.decoder module
    :undoc-members:
    :show-inheritance:
 
+qec\_lego\_bench.decoders.fb module
+-----------------------------------
+
+.. automodule:: qec_lego_bench.decoders.fb
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 qec\_lego\_bench.decoders.profiling\_decoder module
 ---------------------------------------------------
 

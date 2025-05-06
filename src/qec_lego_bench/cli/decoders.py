@@ -32,12 +32,14 @@ class DecoderCli:
         if isinstance(input, DecoderCli):
             self.input: str = input.input
             self.decoder: Any = input.decoder
+            self.decoder_name: str = input.decoder_name
             self.kwargs: dict = input.kwargs.copy()
             return
         try:
             self.input = input
             decoder_name, params = self.named_kwargs
             decoder_name = decoder_name.lower()
+            self.decoder_name = decoder_name
             if decoder_name not in registered_decoder_names:
                 print(
                     f"[error] decoder name '{decoder_name}' not found, possible values: {', '.join(registered_decoder_names.keys())}",
@@ -59,6 +61,10 @@ class DecoderCli:
 
     def __str__(self):
         return self.input
+
+    def to_str(self) -> str:
+        # try to mimic the input string but do not guarantee to be the same
+        return f"{self.decoder_name}({','.join([f'{k}={v}' for k, v in self.kwargs.items()])})"
 
     def __call__(self):
         return self.decoder

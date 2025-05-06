@@ -29,12 +29,14 @@ class NoiseCli:
         if isinstance(input, NoiseCli):
             self.input: str = input.input
             self.noise: Any = input.noise
+            self.noise_name: str = input.noise_name
             self.kwargs: dict = input.kwargs.copy()
             return
         try:
             self.input = input
             noise_name, params = named_kwargs_of(input)
             noise_name = noise_name.lower()
+            self.noise_name = noise_name
             if noise_name not in registered_noise_names:
                 print(
                     f"[error] noise name '{noise_name}' not found, possible values: {', '.join(registered_noise_names.keys())}",
@@ -56,6 +58,10 @@ class NoiseCli:
 
     def __str__(self):
         return self.input
+
+    def to_str(self) -> str:
+        # try to mimic the input string but do not guarantee to be the same
+        return f"{self.noise_name}({','.join([f'{k}={v}' for k, v in self.kwargs.items()])})"
 
     def __call__(self):
         return self.noise

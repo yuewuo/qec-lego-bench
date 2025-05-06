@@ -15,6 +15,7 @@ import tempfile
 from tqdm import tqdm
 import matplotlib as mpl
 from .common import *
+from functools import cached_property
 
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -70,7 +71,7 @@ def notebook_pL_p_compare_decoders(
 
     parameters: dict[str, Any] = {
         "codes": [str(c).replace("=", "@").replace(",", ";") for c in code],
-        "noise": [str(n).replace("=", "@").replace(",", ";") for n in noise],
+        "noises": [str(n).replace("=", "@").replace(",", ";") for n in noise],
         "decoders": [str(dec).replace("=", "@").replace(",", ";") for dec in decoder],
         "json_filename": json_filename,
     }
@@ -129,37 +130,113 @@ def sanity_check_parse_codes_and_noises(
 
 
 @dataclass
-class PlPCompareDecodersMonteCarloFunction:
+class PlPCompareDecodersPlotter:
+    """
+    This plotter will automatically analyze the code and noise model list and figure out the physical error rate parameter.
+    """
+
     decoders: list[str]
+    codes: list[str]
+    noises: list[str]
+    p_key: str = "p"
 
-    def __call__(
-        self, shots: int, code: str, noise: str, verbose: bool = False
-    ) -> tuple[int, MultiDecoderLogicalErrorRates]:
+    hdisplay: display.DisplayHandle = field(
+        default_factory=lambda: display.display("", display_id=True)
+    )
+    fig: Figure = field(default_factory=closed_figure)
 
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            filename = os.path.join(tmp_dir, "tmp")
-            generate_samples(
-                code=code,
-                filename=filename,
-                noise=noise,
-                shots=shots,
-                decoder="none",
-                no_print=not verbose,
-            )
+    @cached_property
+    def p_in_code(self) -> bool:
+        in_code = True
+        for code in self.codes:
+            if self.p_key in CodeCli(code).kwargs:
+                in_code = False
+        return in_code
 
-            # results: dict[str, LogicalErrorResult] = {}
-            # for decoder in tqdm(self.decoders, disable=not verbose):
-            #     if decoder == split:
-            #         continue
-            #     result = benchmark_samples(
-            #         filename=filename,
-            #         decoder=decoder,
-            #         no_print=True,
-            #         remove_initialization_time=True,
-            #     )
-            #     assert result.shots == shots
-            #     results[decoder] = LogicalErrorResult(
-            #         errors=result.errors, elapsed=result.elapsed
-            #     )
+    @cached_property
+    def p_in_noise(self) -> bool:
+        in_noise = True
+        for noise in self.noises:
+            if self.p_key in NoiseCli(noise).kwargs:
+                in_noise = False
+        return in_noise
 
-            # return shots, MultiDecoderLogicalErrorRates(results=results)
+    def get_p(self, code: str, noise: str) -> float:
+        if self.p_in_code:
+            return CodeCli(code).kwargs[self.p_key]
+        if self.p_in_noise:
+            return NoiseCli(noise).kwargs[self.p_key]
+        raise ValueError("no p in code or noise")
+
+    def __call__(self, executor: MonteCarloJobExecutor):
+        fig = self.fig
+        fig.set_size_inches(10, 12)
+        ax = fig.gca()
+        ax.clear()
+        ax.set_xlabel("physical error rate $p$")
+        ax.set_ylabel("logical error rate $p_L$")
+        ax.set_xlim(1e-5, 1)
+        ax.set_xscale("log")
+        ax.set_ylim(1e-6, 1)
+        ax.set_yscale("log")
+
+        available_jobs = []
+        for job in executor:
+            if job is None or job.result is None:
+                continue
+            available_jobs.append(job)
+
+        if len(available_jobs) == 0:
+            self.hdisplay.update(fig)
+            return
+
+        # group the jobs by the same code and noise with various p
+        # (code, noise) -> [(job, p), ...]
+        jobs_by_code_and_noise: dict[
+            tuple[str, str], list[tuple[MonteCarloJob, float]]
+        ] = {}
+        for job in available_jobs:
+            code = CodeCli(job["code"])
+            noise = NoiseCli(job["noise"])
+            if self.p_key in code.kwargs:
+                p = code.kwargs[self.p_key]
+                del code.kwargs[self.p_key]
+            else:
+                assert (
+                    self.p_key in noise.kwargs
+                ), f"no kwargs '{self.p_key}' in code or noise"
+                p = noise.kwargs[self.p_key]
+                del noise.kwargs[self.p_key]
+            key = (code.to_str(), noise.to_str())
+            if key not in jobs_by_code_and_noise:
+                jobs_by_code_and_noise[key] = []
+            jobs_by_code_and_noise[key].append((job, p))
+
+        # then check if all the noise are the same; if so, put it to the title instead of legend
+        common_noise: None | str = list(jobs_by_code_and_noise.keys())[0][1]
+        for code, noise in jobs_by_code_and_noise.keys():
+            if noise != common_noise:
+                common_noise = None
+
+        title = f"pL-p decoder comparison" + (
+            f" ({common_noise} noise)" if common_noise is not None else ""
+        )
+        ax.set_title(title)
+
+        for (code, noise), job_vec in jobs_by_code_and_noise.items():
+            job_vec.sort(key=lambda x: x[1])  # sort by p
+            x_vec = []
+            y_vec = []
+            err_vec = []
+            for job, p in job_vec:
+                x_vec.append(p)
+                stats = job.result.stats_of(job)  # type: ignore
+                y_vec.append(stats.failure_rate_value)
+                err_vec.append(stats.failure_rate_uncertainty)
+            label = f"{code}" + (f" ({noise})" if common_noise is None else "")
+            ax.errorbar(x_vec, y_vec, err_vec, label=label)
+
+        # TODO: display individual decoder results instead of the joint result.
+
+        ax.legend()
+        self.hdisplay.update(fig)
