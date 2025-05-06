@@ -26,7 +26,9 @@ def named_kwargs_of(input: str) -> tuple[str, dict[str, str]]:
     expecting a format of 'name(a=1,b=2)'
     """
     if "(" in input:
-        assert input[-1] == ")"
+        assert (
+            input[-1] == ")"
+        ), f"input '{input}' is not a valid format, consider using ; in lieu of ,"
         split_index = input.index("(")
         name = input[:split_index]
         assert name.isidentifier(), f"name '{name}' is not a valid identifier"
