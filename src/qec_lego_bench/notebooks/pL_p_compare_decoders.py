@@ -1,4 +1,3 @@
-from slugify import slugify
 import arguably
 from qec_lego_bench.cli.util import *
 from qec_lego_bench.cli.codes import *
@@ -6,16 +5,15 @@ from qec_lego_bench.cli.noises import *
 from qec_lego_bench.cli.decoders import *
 import os
 from dataclasses import dataclass, field
-from qec_lego_bench.hpc.monte_carlo import LogicalErrorResult
 from qec_lego_bench.hpc.monte_carlo import *
 from qec_lego_bench.hpc.submitter import *
 from qec_lego_bench.hpc.plotter import *
-from qec_lego_bench.cli.generate_samples import generate_samples, benchmark_samples
-import tempfile
-from tqdm import tqdm
 import matplotlib as mpl
 from .common import *
 from functools import cached_property
+import matplotlib.colors as mcolors
+from cycler import cycler
+from matplotlib.lines import Line2D
 
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -35,6 +33,11 @@ def notebook_pL_p_compare_decoders(
     no_progress_bar: bool = False,
     max_cpu_hours: float | None = None,
     target_precision: float | None = None,
+    high_pL_threshold: float | None = None,
+    min_shots: int | None = None,
+    max_shots: int | None = None,
+    max_errors: int | None = None,
+    max_adaptive_min_shots_cpu_hours: float | None = None,
     slurm_maximum_jobs: int | None = None,
     slurm_cores_per_node: int | None = None,
     slurm_mem_per_job: int | None = None,
@@ -81,6 +84,18 @@ def notebook_pL_p_compare_decoders(
         parameters["max_cpu_hours"] = max_cpu_hours
     if target_precision is not None:
         parameters["target_precision"] = target_precision
+    if high_pL_threshold is not None:
+        parameters["high_pL_threshold"] = high_pL_threshold
+    if min_shots is not None:
+        parameters["min_shots"] = min_shots
+    if max_shots is not None:
+        parameters["max_shots"] = max_shots
+    if max_errors is not None:
+        parameters["max_errors"] = max_errors
+    if max_adaptive_min_shots_cpu_hours is not None:
+        parameters["max_adaptive_min_shots_cpu_hours"] = (
+            max_adaptive_min_shots_cpu_hours
+        )
     if slurm_maximum_jobs is not None:
         parameters["slurm_maximum_jobs"] = slurm_maximum_jobs
     if slurm_cores_per_node is not None:
@@ -196,18 +211,18 @@ class PlPCompareDecodersPlotter:
             tuple[str, str], list[tuple[MonteCarloJob, float]]
         ] = {}
         for job in available_jobs:
-            code = CodeCli(job["code"])
-            noise = NoiseCli(job["noise"])
-            if self.p_key in code.kwargs:
-                p = code.kwargs[self.p_key]
-                del code.kwargs[self.p_key]
+            code_cli = CodeCli(job["code"])
+            noise_cli = NoiseCli(job["noise"])
+            if self.p_key in code_cli.kwargs:
+                p = code_cli.kwargs[self.p_key]
+                del code_cli.kwargs[self.p_key]
             else:
                 assert (
-                    self.p_key in noise.kwargs
+                    self.p_key in noise_cli.kwargs
                 ), f"no kwargs '{self.p_key}' in code or noise"
-                p = noise.kwargs[self.p_key]
-                del noise.kwargs[self.p_key]
-            key = (code.to_str(), noise.to_str())
+                p = noise_cli.kwargs[self.p_key]
+                del noise_cli.kwargs[self.p_key]
+            key = (code_cli.to_str(), noise_cli.to_str())
             if key not in jobs_by_code_and_noise:
                 jobs_by_code_and_noise[key] = []
             jobs_by_code_and_noise[key].append((job, p))
@@ -223,20 +238,54 @@ class PlPCompareDecodersPlotter:
         )
         ax.set_title(title)
 
-        for (code, noise), job_vec in jobs_by_code_and_noise.items():
+        legend_lines: list[typing.Any] = []
+        legend_labels: list[str] = []
+
+        color_cycle = cycler(color=list(mcolors.TABLEAU_COLORS.values()))
+        marker_cycle = cycler(marker=["o", "v", "^", "s", "P", "D", "*", "X", "H"])
+        for ((code, noise), job_vec), color in zip(
+            jobs_by_code_and_noise.items(), color_cycle
+        ):
             job_vec.sort(key=lambda x: x[1])  # sort by p
-            x_vec = []
-            y_vec = []
-            err_vec = []
-            for job, p in job_vec:
-                x_vec.append(p)
-                stats = job.result.stats_of(job)  # type: ignore
-                y_vec.append(stats.failure_rate_value)
-                err_vec.append(stats.failure_rate_uncertainty)
+            # check if all the decoders are available, otherwise panic
+            for decoder in self.decoders:
+                if decoder not in job.result.results:  # type: ignore
+                    raise ValueError(f"decoder {decoder} not found in result")
+            # plot a line for each decoder
+            for decoder, marker in zip(self.decoders, marker_cycle):
+                x_vec = []
+                y_vec = []
+                err_vec = []
+                for job, p in job_vec:
+                    x_vec.append(p)
+                    stats = Stats(
+                        stats=sinter.AnonTaskStats(
+                            shots=job.shots,
+                            errors=job.result.results[decoder].errors,  # type: ignore
+                        ),
+                    )
+                    y_vec.append(stats.failure_rate_value)
+                    err_vec.append(stats.failure_rate_uncertainty)
+                ax.errorbar(
+                    x_vec,
+                    y_vec,
+                    err_vec,
+                    color=color["color"],
+                    marker=marker["marker"],
+                )
+
+            legend_lines.append(Line2D([0], [0], color=color["color"]))
             label = f"{code}" + (f" ({noise})" if common_noise is None else "")
-            ax.errorbar(x_vec, y_vec, err_vec, label=label)
+            legend_labels.append(label)
+
+        # also add decoder legends
+        for decoder, marker in zip(self.decoders, marker_cycle):
+            legend_lines.append(
+                Line2D([0], [0], marker=marker["marker"], color="black")
+            )
+            legend_labels.append(decoder)
 
         # TODO: display individual decoder results instead of the joint result.
 
-        ax.legend()
+        ax.legend(legend_lines, legend_labels)
         self.hdisplay.update(fig)
