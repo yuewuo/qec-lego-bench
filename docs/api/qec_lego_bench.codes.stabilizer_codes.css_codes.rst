@@ -36,6 +36,14 @@ qec\_lego\_bench.codes.stabilizer\_codes.css\_codes.rotated\_surface\_code modul
    :undoc-members:
    :show-inheritance:
 
+qec\_lego\_bench.codes.stabilizer\_codes.css\_codes.triangular\_color\_code module
+----------------------------------------------------------------------------------
+
+.. automodule:: qec_lego_bench.codes.stabilizer_codes.css_codes.triangular_color_code
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

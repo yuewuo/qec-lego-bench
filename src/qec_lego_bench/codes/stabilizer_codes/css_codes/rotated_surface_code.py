@@ -2,7 +2,6 @@ from qec_lego_bench.codes.stabilizer_codes.css_codes import CSSCode, Coordinates
 from dataclasses import dataclass
 from galois import GF2
 import numpy as np
-from galois.typing import ArrayLike
 from qec_lego_bench.cli.codes import code_cli
 
 
