@@ -1,12 +1,8 @@
 from qec_lego_bench.cli.decoders import decoder_cli
 from sinter._decoding._decoding_pymatching import PyMatchingDecoder
-from sinter._decoding._decoding_fusion_blossom import FusionBlossomDecoder
 from sinter._decoding._decoding_vacuous import VacuousDecoder
 
 decoder_cli("PyMatchingDecoder", "pymatching", "mwpm")(PyMatchingDecoder)
-decoder_cli("FusionBlossomDecoder", "fusion_blossom", "fb", decompose_errors=True)(
-    FusionBlossomDecoder
-)
 decoder_cli("VacuousDecoder", "none")(VacuousDecoder)
 
 try:
