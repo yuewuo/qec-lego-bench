@@ -1,11 +1,14 @@
 from .util import named_kwargs_of, params_of_func_or_cls
 import sys
 from typing import Union, Any
+from functools import cached_property
+from frozendict import frozendict
 
 registered_decoder_names = {}
+decompose_errors_decoders: set[str] = set()
 
 
-def decoder_cli(*decoder_names: str):
+def decoder_cli(*decoder_names: str, decompose_errors: bool = False):
     def decorator(constructor):
         params = params_of_func_or_cls(constructor)
         for decoder_name in decoder_names:
@@ -17,6 +20,8 @@ def decoder_cli(*decoder_names: str):
                     file=sys.stderr,
                 )
             registered_decoder_names[decoder_name] = (constructor, params)
+            if decompose_errors:
+                decompose_errors_decoders.add(decoder_name)
         return constructor
 
     return decorator
@@ -31,7 +36,7 @@ class DecoderCli:
             return
         try:
             self.input = input
-            decoder_name, params = named_kwargs_of(input)
+            decoder_name, params = self.named_kwargs
             decoder_name = decoder_name.lower()
             if decoder_name not in registered_decoder_names:
                 print(
@@ -57,3 +62,17 @@ class DecoderCli:
 
     def __call__(self):
         return self.decoder
+
+    @cached_property
+    def named_kwargs(self) -> tuple[str, frozendict[str, str]]:
+        decoder_name, params = named_kwargs_of(self.input)
+        return decoder_name, frozendict(params)
+
+    @cached_property
+    def decoder_name(self) -> str:
+        decoder_name, _ = self.named_kwargs
+        return decoder_name
+
+    @cached_property
+    def decompose_errors(self) -> bool:
+        return self.decoder_name in decompose_errors_decoders

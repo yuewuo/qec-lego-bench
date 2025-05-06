@@ -64,7 +64,9 @@ def decoding_speed(
     noisy_circuit = noise3_instance(noise2_instance(noise_instance(ideal_circuit)))
 
     circuit = noisy_circuit
-    dem = noisy_circuit.detector_error_model(approximate_disjoint_errors=True)
+    dem = noisy_circuit.detector_error_model(
+        decompose_errors=decoder.decompose_errors, approximate_disjoint_errors=True
+    )
 
     if hasattr(decoder_instance, "pass_circuit") and decoder_instance.pass_circuit:
         decoder_instance = decoder_instance.with_circuit(noisy_circuit)

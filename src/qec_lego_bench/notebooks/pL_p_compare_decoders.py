@@ -60,7 +60,7 @@ def notebook_pL_p_compare_decoders(
         basename = os.path.basename(notebook_filepath)
         if basename.endswith(".ipynb"):
             basename = basename[: -len(".ipynb")]
-        json_filename = default_json_filename(code=code, noise=noise, basename=basename)
+        json_filename = default_json_filename(basename=basename)
 
     assert decoder is not None, "please provide a list of decoders"
     assert code is not None, "please provide a list of codes"
@@ -105,9 +105,9 @@ def notebook_pL_p_compare_decoders(
 
 
 def default_json_filename(
-    code: str, noise: str, basename: str = "z-pL-p-compare-decoders"
+    basename: str = "z-pL-p-compare-decoders",
 ) -> str:
-    return f"{basename}.{slugify(str(code))}.{slugify(str(noise))}.json"
+    return f"{basename}.json"
 
 
 def sanity_check_parse_codes_and_noises(
@@ -147,19 +147,19 @@ class PlPCompareDecodersMonteCarloFunction:
                 no_print=not verbose,
             )
 
-            results: dict[str, LogicalErrorResult] = {}
-            for decoder in tqdm(self.decoders, disable=not verbose):
-                if decoder == split:
-                    continue
-                result = benchmark_samples(
-                    filename=filename,
-                    decoder=decoder,
-                    no_print=True,
-                    remove_initialization_time=True,
-                )
-                assert result.shots == shots
-                results[decoder] = LogicalErrorResult(
-                    errors=result.errors, elapsed=result.elapsed
-                )
+            # results: dict[str, LogicalErrorResult] = {}
+            # for decoder in tqdm(self.decoders, disable=not verbose):
+            #     if decoder == split:
+            #         continue
+            #     result = benchmark_samples(
+            #         filename=filename,
+            #         decoder=decoder,
+            #         no_print=True,
+            #         remove_initialization_time=True,
+            #     )
+            #     assert result.shots == shots
+            #     results[decoder] = LogicalErrorResult(
+            #         errors=result.errors, elapsed=result.elapsed
+            #     )
 
-            return shots, MultiDecoderLogicalErrorRates(results=results)
+            # return shots, MultiDecoderLogicalErrorRates(results=results)

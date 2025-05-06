@@ -60,7 +60,9 @@ def generate_samples(
         dem_filename = filename + ".dem"
         if not no_print:
             print("Writing DEM file to", dem_filename)
-        dem = noisy_circuit.detector_error_model(approximate_disjoint_errors=True)
+        dem = noisy_circuit.detector_error_model(
+            decompose_errors=decoder.decompose_errors, approximate_disjoint_errors=True
+        )
         dem.to_file(dem_filename)
         num_dets = dem.num_detectors
         num_obs = dem.num_observables

@@ -103,7 +103,7 @@ def notebook_compare_decoder(
 
 
 def default_json_filename(
-    code: str, noise: str, basename: str = "z-compare-decoder"
+    code: CodeCli | str, noise: NoiseCli | str, basename: str = "z-compare-decoder"
 ) -> str:
     return f"{basename}.{slugify(str(code))}.{slugify(str(noise))}.json"
 

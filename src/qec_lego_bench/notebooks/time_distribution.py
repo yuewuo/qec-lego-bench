@@ -98,7 +98,7 @@ def notebook_time_distribution(
 
 
 def default_json_filename(
-    code: str, noise: str, basename: str = "z-time-distribution"
+    code: CodeCli | str, noise: NoiseCli | str, basename: str = "z-time-distribution"
 ) -> str:
     return f"{basename}.{slugify(str(code))}.{slugify(str(noise))}.json"
 

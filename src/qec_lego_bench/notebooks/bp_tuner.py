@@ -117,7 +117,10 @@ def notebook_bp_tuner(
 
 
 def default_json_filename(
-    code: str, noise: str, decoder: str, basename: str = "z-bp-tuner"
+    code: CodeCli | str,
+    noise: NoiseCli | str,
+    decoder: DecoderCli | str,
+    basename: str = "z-bp-tuner",
 ):
     return f"{basename}.{slugify(str(code))}.{slugify(str(noise))}.{slugify(str(decoder))}.json"
 
