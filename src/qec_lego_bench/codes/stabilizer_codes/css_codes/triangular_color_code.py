@@ -10,6 +10,24 @@ from qec_lego_bench.cli.codes import code_cli
 class TriangularColorCode(CSSCode):
     d: int
 
+    """
+    whether to use the 4th coordinates to mark the color for the chromobius decoder
+
+    # from https://github.com/quantumlib/chromobius/blob/main/doc/chromobius_api_reference.md
+    Basis+Color annotations. Every detector that appears in an error
+        must specify coordinate data including a fourth coordinate. The 4th
+        coordinate indicates the basis and color of the detector with the
+        convention:
+            0 = Red X
+            1 = Green X
+            2 = Blue X
+            3 = Red Z
+            4 = Green Z
+            5 = Blue Z
+            -1 = Ignore this Detector
+    """
+    color: bool = False
+
     @property
     def n(self) -> int:
         d = self.d
@@ -42,13 +60,23 @@ class TriangularColorCode(CSSCode):
         def add_x_stabilizer(c: int, r: int) -> int:
             idx = len(self._x_stabilizer_coordinates)
             self._x_stabilizer_coordinates_to_index[(r, c)] = idx
-            self._x_stabilizer_coordinates.append((r, c, 0))
+            if self.color:
+                self._x_stabilizer_coordinates.append(
+                    (r, c, 0, self._stabilizer_color(r))
+                )
+            else:
+                self._x_stabilizer_coordinates.append((r, c, 0))
             return idx
 
         def add_z_stabilizer(c: int, r: int) -> int:
             idx = len(self._z_stabilizer_coordinates)
             self._z_stabilizer_coordinates_to_index[(r, c)] = idx
-            self._z_stabilizer_coordinates.append((r, c, 0))
+            if self.color:
+                self._z_stabilizer_coordinates.append(
+                    (r, c, 0, 3 + self._stabilizer_color(r))
+                )
+            else:
+                self._z_stabilizer_coordinates.append((r, c, 0))
             return idx
 
         # first add all data qubits
@@ -114,6 +142,10 @@ class TriangularColorCode(CSSCode):
             if self._is_data_qubit(r + dr, c + dc):
                 indices.append(self._qubit_coordinates_to_index[(r + dr, c + dc)])
         return indices
+
+    def _stabilizer_color(self, r: int) -> int:
+        # 0 = Red, 1 = Green, 2 = Blue
+        return r % 3
 
     @property
     def H_X(self) -> np.ndarray:
