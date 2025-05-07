@@ -95,15 +95,17 @@ def generate_samples(
             decoder_instance = decoder_instance.with_circuit(noisy_circuit)
 
         decoder_instance.benchmark_suite_filename = cbor_filename
-        decoder_instance.decode_via_files(
-            num_shots=shots,
-            num_dets=num_dets,
-            num_obs=num_obs,
-            dem_path=dem_filename,
-            dets_b8_in_path=det_filename,
-            obs_predictions_b8_out_path=obs_filename,
-            tmp_dir=tempfile.gettempdir(),
-        )
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            predicts_path = Path(tmp_dir + "/predicted.b8")
+            decoder_instance.decode_via_files(
+                num_shots=shots,
+                num_dets=num_dets,
+                num_obs=num_obs,
+                dem_path=dem_filename,
+                dets_b8_in_path=det_filename,
+                obs_predictions_b8_out_path=predicts_path,
+                tmp_dir=tempfile.gettempdir(),
+            )
 
 
 @dataclass_json(undefined="RAISE")  # avoid accidentally override other types

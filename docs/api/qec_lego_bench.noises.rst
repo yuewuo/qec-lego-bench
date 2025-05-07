@@ -4,6 +4,14 @@ qec\_lego\_bench.noises package
 Submodules
 ----------
 
+qec\_lego\_bench.noises.biased\_noise module
+--------------------------------------------
+
+.. automodule:: qec_lego_bench.noises.biased_noise
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 qec\_lego\_bench.noises.depolarize\_noise module
 ------------------------------------------------
 

@@ -239,6 +239,7 @@ class BPTunerPlotter:
 
         # known warning: UserWarning: Attempt to set non-positive zlim on a log-scaled axis will be ignored.
         with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
             ax.set_zscale("log")  # type: ignore
         ax.set_xticks([0, 1, 2, 3], ["1", "10", "100", "1000"])
         ax.set_xlabel("max_iter")
