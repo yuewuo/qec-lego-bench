@@ -59,6 +59,10 @@ def notebook_time_distribution(
 
     assert decoder is not None, "please provide a list of decoders"
 
+    code = CodeCli(code)
+    noise = NoiseCli(noise)
+    decoder = [DecoderCli(d) for d in decoder]
+
     parameters: dict[str, Any] = {
         "code": str(code).replace("=", "@"),
         "noise": str(noise).replace("=", "@"),

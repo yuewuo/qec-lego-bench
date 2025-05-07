@@ -52,6 +52,12 @@ def notebook_compare_decoder(
         compare_decoder_template
     ), f"Notebook file not found: {compare_decoder_template}"
 
+    assert decoder is not None, "please provide a list of decoders"
+
+    code = CodeCli(code)
+    noise = NoiseCli(noise)
+    decoder = [DecoderCli(d) for d in decoder]
+
     basename = os.path.basename(notebook_filepath)
     if basename.endswith(".ipynb"):
         basename = basename[: -len(".ipynb")]
@@ -61,8 +67,6 @@ def notebook_compare_decoder(
         if basename.endswith(".ipynb"):
             basename = basename[: -len(".ipynb")]
         json_filename = default_json_filename(code=code, noise=noise, basename=basename)
-
-    assert decoder is not None, "please provide a list of decoders"
 
     parameters: dict[str, Any] = {
         "code": str(code).replace("=", "@"),

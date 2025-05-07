@@ -70,6 +70,10 @@ def notebook_pL_p_compare_decoders(
     assert code is not None, "please provide a list of codes"
     assert noise is not None, "please provide a list of noises"
 
+    code = [CodeCli(c) for c in code]
+    noise = [NoiseCli(n) for n in noise]
+    decoder = [DecoderCli(d) for d in decoder]
+
     sanity_check_parse_codes_and_noises(code, noise)
 
     parameters: dict[str, Any] = {

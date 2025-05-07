@@ -52,6 +52,10 @@ def notebook_bp_tuner(
     srun_suffix: str = DEFAULT_SRUN_SUFFIX,
     srun_wait: bool = False,  # if not wait, output to jobout and joberr
 ):
+    code = CodeCli(code)
+    noise = NoiseCli(noise)
+    decoder = DecoderCli(decoder)
+
     """
     Generate and run a notebook that tunes the BP decoder for a given code, noise and decoder.
     """
@@ -71,9 +75,7 @@ def notebook_bp_tuner(
         basename = os.path.basename(notebook_filepath)
         if basename.endswith(".ipynb"):
             basename = basename[: -len(".ipynb")]
-        json_filename = default_json_filename(
-            code=code, noise=noise, decoder=decoder, basename=basename
-        )
+        json_filename = basename + ".json"
 
     parameters: dict[str, Any] = {
         "code": str(code).replace("=", "@"),
