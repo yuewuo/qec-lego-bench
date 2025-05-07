@@ -21,6 +21,7 @@ import matplotlib as mpl
 from mpl_toolkits.mplot3d import axes3d
 from .common import *
 from uncertainties import Variable as UFloat
+import warnings
 
 
 this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -236,7 +237,9 @@ class BPTunerPlotter:
             X, Y, accuracy_array.T, linewidth=0.3, color="black"
         )
 
-        ax.set_zscale("log")  # type: ignore
+        # known warning: UserWarning: Attempt to set non-positive zlim on a log-scaled axis will be ignored.
+        with warnings.catch_warnings():
+            ax.set_zscale("log")  # type: ignore
         ax.set_xticks([0, 1, 2, 3], ["1", "10", "100", "1000"])
         ax.set_xlabel("max_iter")
         ax.set_ylabel("ms_scaling_factor")
