@@ -222,6 +222,7 @@ class BPTunerPlotter:
         with np.errstate(divide="ignore"):
             accuracy_array = 1 / pL_array
             accuracy_array[pL_array == 0] = best_pL.nominal_value  # temporary
+            accuracy_array /= accuracy_array.max()  # scale the maximum data point to 1
 
         X, Y = np.meshgrid(
             # list(range(len(self.max_iter_choices))),
@@ -229,22 +230,38 @@ class BPTunerPlotter:
             # self.max_iter_choices,
             self.ms_scaling_factor_choices,
         )
-        cmap = cm.coolwarm  # type: ignore
         surface = ax.plot_surface(
-            X, Y, accuracy_array.T, cmap=cmap, linewidth=0, antialiased=True
+            X,
+            Y,
+            accuracy_array.T,
+            cmap="Reds_r",
+            linewidth=0,
+            antialiased=True,
+            vmin=0,
+            vmax=0.8,
         )
         wireframe = ax.plot_wireframe(
             X, Y, accuracy_array.T, linewidth=0.3, color="black"
         )
 
+        ax.set_xticks([0, 1, 2, 3], ["1", "10", "100", "1000"])
+        ax.set_xlabel("max iterations")
+        ax.set_xlim(0, 3)
+
+        ax.set_ylabel("ms scaling factor")
+        ax.set_yticks(
+            [0, 0.2, 0.4, 0.6, 0.8, 1], ["0", "0.2", "0.4", "0.6", "0.8", "1"]
+        )
+        ax.set_ylim(0, 1)
+
+        ax.set_zlabel("accuracy $p_L^{-1}$")
+        ax.set_zticks([0, 0.25, 0.5, 0.75, 1], ["0", "25%", "50%", "75%", "100%"])
         # known warning: UserWarning: Attempt to set non-positive zlim on a log-scaled axis will be ignored.
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             ax.set_zscale("log")  # type: ignore
-        ax.set_xticks([0, 1, 2, 3], ["1", "10", "100", "1000"])
-        ax.set_xlabel("max_iter")
-        ax.set_ylabel("ms_scaling_factor")
-        ax.set_zlabel("accuracy $p_L^{-1}$")
+            ax.set_zlim(0, 1)
+
         max_iter, ms_scaling_factor = best_config
         ax.title.set_text(
             f"{decoder}: iter={max_iter}, scaling={ms_scaling_factor}, pL={best_pL:.2uS}"

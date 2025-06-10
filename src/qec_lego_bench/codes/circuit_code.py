@@ -9,8 +9,11 @@ class CircuitCode(Code):
     A code directly from a circuit in a file
     """
 
+    skip_read_file: bool = False
+
     def __init__(self, filepath: str):
-        self._circuit = Circuit.from_file(filepath)
+        if not self.skip_read_file:
+            self._circuit = Circuit.from_file(filepath)
         super().__init__()
 
     @property

@@ -254,7 +254,12 @@ class PlPCompareDecodersPlotter:
             # check if all the decoders are available, otherwise panic
             for decoder in self.decoders:
                 if decoder not in job.result.results:  # type: ignore
-                    raise ValueError(f"decoder {decoder} not found in result")
+                    raise ValueError(
+                        f"decoder {decoder} not found in result. "
+                        + "You probably add a new decoder for testing. We recommend restarting from scratch "
+                        + "because this notebook strictly compares decoders with the exact same sequence of syndrome. "
+                        + "Because stim simulation will not produce the same sequence unless given exactly the same machine and version, it's safer to just delete everything and rerun."
+                    )
             # plot a line for each decoder
             for decoder, marker in zip(self.decoders, marker_cycle):
                 x_vec = []

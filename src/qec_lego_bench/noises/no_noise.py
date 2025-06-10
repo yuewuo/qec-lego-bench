@@ -11,5 +11,7 @@ class NoNoise(Noise):
     no noise
     """
 
+    p: float = 0.3  # no effect, but allows certain tools to read the noise strength
+
     def __call__(self, circuit: stim.Circuit) -> stim.Circuit:
         return circuit.copy()

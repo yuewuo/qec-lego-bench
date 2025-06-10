@@ -328,10 +328,15 @@ class SlurmClientConnector:
         except Exception as e:
             print(e)
             from dask.distributed import Client, LocalCluster
+            import psutil
+
+            total_memory_gb = psutil.virtual_memory().total / (1024**3)
+            n_workers = self.local_maximum_jobs or multiprocessing.cpu_count()
 
             cluster = LocalCluster(
-                n_workers=self.local_maximum_jobs or multiprocessing.cpu_count(),
+                n_workers=n_workers,
                 threads_per_worker=1,
+                memory_limit=f"{int(math.floor(total_memory_gb))}GB",
             )
         print("cluster dashboard link:", cluster.dashboard_link)
         client = Client(cluster)
