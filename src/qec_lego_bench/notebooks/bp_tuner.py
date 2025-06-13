@@ -255,7 +255,7 @@ class BPTunerPlotter:
         ax.set_ylim(0, 1)
 
         ax.set_zlabel("accuracy $p_L^{-1}$")
-        ax.set_zticks([0, 0.25, 0.5, 0.75, 1], ["0", "25%", "50%", "75%", "100%"])
+        ax.set_zticks([0, 0.25, 0.5, 0.75, 1], ["0", "25%", "50%", "75%", "100%"])  # type: ignore
         # known warning: UserWarning: Attempt to set non-positive zlim on a log-scaled axis will be ignored.
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")

@@ -59,6 +59,25 @@ class MultiDecoderLogicalErrorRates:  # MonteCarloResult
             ),
         )
 
+    @property
+    def average_elapsed(self) -> float:
+        elapsed_vec = [
+            result.elapsed
+            for result in self.results.values()
+            if result.elapsed is not None
+        ]
+        total_elapsed = sum(elapsed_vec)
+        return total_elapsed / len(elapsed_vec)
+
+    @property
+    def min_elapsed(self) -> float:
+        elapsed_vec = [
+            result.elapsed
+            for result in self.results.values()
+            if result.elapsed is not None
+        ]
+        return min(elapsed_vec, default=0)
+
 
 @dataclass_json(undefined="RAISE")  # avoid accidentally override other types
 @dataclass

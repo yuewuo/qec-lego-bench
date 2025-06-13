@@ -36,6 +36,14 @@ qec\_lego\_bench.notebooks.pL\_p\_compare\_decoders module
    :undoc-members:
    :show-inheritance:
 
+qec\_lego\_bench.notebooks.speed\_scaling module
+------------------------------------------------
+
+.. automodule:: qec_lego_bench.notebooks.speed_scaling
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 qec\_lego\_bench.notebooks.time\_distribution module
 ----------------------------------------------------
 

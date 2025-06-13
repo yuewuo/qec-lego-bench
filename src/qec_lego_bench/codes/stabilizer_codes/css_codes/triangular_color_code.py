@@ -62,7 +62,7 @@ class TriangularColorCode(CSSCode):
             self._x_stabilizer_coordinates_to_index[(r, c)] = idx
             if self.color:
                 self._x_stabilizer_coordinates.append(
-                    (r, c, 0, self._stabilizer_color(r))
+                    (r, c, 0, self._stabilizer_color(r))  # type: ignore
                 )
             else:
                 self._x_stabilizer_coordinates.append((r, c, 0))
@@ -73,7 +73,7 @@ class TriangularColorCode(CSSCode):
             self._z_stabilizer_coordinates_to_index[(r, c)] = idx
             if self.color:
                 self._z_stabilizer_coordinates.append(
-                    (r, c, 0, 3 + self._stabilizer_color(r))
+                    (r, c, 0, 3 + self._stabilizer_color(r))  # type: ignore
                 )
             else:
                 self._z_stabilizer_coordinates.append((r, c, 0))

@@ -44,6 +44,14 @@ qec\_lego\_bench.cli.logical\_error\_rate module
    :undoc-members:
    :show-inheritance:
 
+qec\_lego\_bench.cli.multi\_decoding\_speed module
+--------------------------------------------------
+
+.. automodule:: qec_lego_bench.cli.multi_decoding_speed
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 qec\_lego\_bench.cli.noises module
 ----------------------------------
 
