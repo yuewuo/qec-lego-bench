@@ -152,19 +152,25 @@ def benchmark_samples(
     assert shots * obs_bytes_per_shot == obs_bytes, "obs doesn't match det size"
 
     if remove_initialization_time:
-        init_profiling_decoder = ProfilingDecoder(decoder_instance)
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            predicts_path = Path(predict_filename or (tmp_dir + "/predicted.b8"))
-            init_profiling_decoder.decode_via_files(
-                num_shots=1,
-                num_dets=num_dets,
-                num_obs=num_obs,
-                dem_path=Path(dem_filename),
-                dets_b8_in_path=Path(det_filename),
-                obs_predictions_b8_out_path=predicts_path,
-                tmp_dir=Path(tmp_dir),
-            )
-        initialization_time = init_profiling_decoder.elapsed
+        # to avoid cold start, run multiple initializations to get the average initialization time
+        def get_initialization_time() -> float:
+            init_profiling_decoder = ProfilingDecoder(decoder_instance)
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                predicts_path = Path(predict_filename or (tmp_dir + "/predicted.b8"))
+                init_profiling_decoder.decode_via_files(
+                    num_shots=1,
+                    num_dets=num_dets,
+                    num_obs=num_obs,
+                    dem_path=Path(dem_filename),
+                    dets_b8_in_path=Path(det_filename),
+                    obs_predictions_b8_out_path=predicts_path,
+                    tmp_dir=Path(tmp_dir),
+                )
+            return init_profiling_decoder.elapsed
+
+        get_initialization_time()  # remove cold start time
+        init_times = [get_initialization_time() for _ in range(10)]
+        initialization_time = sum(init_times) / len(init_times)
 
     profiling_decoder = ProfilingDecoder(decoder_instance)
     num_shots = shots if max_shots is None else min(shots, max_shots)
