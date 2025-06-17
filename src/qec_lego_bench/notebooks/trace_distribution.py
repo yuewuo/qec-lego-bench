@@ -185,7 +185,7 @@ class TraceDistributionMonteCarloFunction:
         sample_filename = samples_filename_of(code, noise, idx, self.unit_shots)
         filename = os.path.join(self.samples_dir, sample_filename)
         trace_filename = os.path.join(
-            self.trace_dir, f"{decoder}.{sample_filename}.bin"
+            self.trace_dir, f"{slugify(str(decoder))}.{sample_filename}.bin"
         )
 
         start_time = time.time()
@@ -198,3 +198,55 @@ class TraceDistributionMonteCarloFunction:
         elapsed = time.time() - start_time
 
         return (self.unit_shots, LogicalErrorResult(elapsed=elapsed))
+
+
+@dataclass
+class TraceTimeDistributionPlotter:
+    unit_shots: int
+    repeats: int
+    trace_dir: str
+    code: str
+    noise: str
+    hdisplay: display.DisplayHandle = field(
+        default_factory=lambda: display.display("", display_id=True)
+    )
+    fig: Figure = field(default_factory=closed_figure)
+
+    def __call__(self, decoders: list[str]):
+        fig = self.fig
+        fig.clear()
+        fig.set_size_inches(6, 4 * len(decoders))
+        axes = fig.subplots(
+            len(decoders),
+            1,
+            squeeze=False,
+            gridspec_kw={"hspace": 0.3},
+        )
+        for i, decoder in enumerate(decoders):
+            ax = axes[i][0]
+            ax.clear()
+            self.plot(decoder, ax=ax)
+            self.hdisplay.update(fig)
+
+    def plot(
+        self,
+        decoder: str,
+        ax: mpl.axes.Axes,
+    ):
+        # first read the distribution from the trace files
+        distribution = FloatLogDistribution()
+        for idx in range(self.repeats):
+            sample_filename = samples_filename_of(
+                self.code, self.noise, idx, self.unit_shots
+            )
+            trace_filename = os.path.join(
+                self.trace_dir, f"{slugify(str(decoder))}.{sample_filename}.bin"
+            )
+            distribution += FloatLogDistribution().load_trace(trace_filename)
+        x_vec, y_vec = distribution.flatten()
+        ax.plot(x_vec, y_vec, ".-")
+        ax.set_xlabel("decoding time ($s$)")
+        ax.set_xscale("log")
+        ax.set_ylabel("sample count")
+        ax.set_yscale("log")
+        ax.title.set_text(f"{decoder}: L={distribution.average():.2e}(s)")
