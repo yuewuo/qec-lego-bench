@@ -12,6 +12,7 @@ __pycache__
 slurm_job
 slurm_jobs
 tmp
+tmp_*
 .unison.*
 
 # papermilled jupyter notebooks
