@@ -52,6 +52,14 @@ qec\_lego\_bench.notebooks.time\_distribution module
    :undoc-members:
    :show-inheritance:
 
+qec\_lego\_bench.notebooks.trace\_distribution module
+-----------------------------------------------------
+
+.. automodule:: qec_lego_bench.notebooks.trace_distribution
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

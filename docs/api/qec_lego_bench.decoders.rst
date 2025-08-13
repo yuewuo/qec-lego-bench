@@ -60,6 +60,14 @@ qec\_lego\_bench.decoders.profiling\_decoder module
    :undoc-members:
    :show-inheritance:
 
+qec\_lego\_bench.decoders.relaybp module
+----------------------------------------
+
+.. automodule:: qec_lego_bench.decoders.relaybp
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

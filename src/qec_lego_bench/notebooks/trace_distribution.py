@@ -211,6 +211,7 @@ class TraceTimeDistributionPlotter:
         default_factory=lambda: display.display("", display_id=True)
     )
     fig: Figure = field(default_factory=closed_figure)
+    basename: str = "plot-trace"
 
     def __call__(self, decoders: list[str]):
         fig = self.fig
@@ -234,15 +235,25 @@ class TraceTimeDistributionPlotter:
         ax: mpl.axes.Axes,
     ):
         # first read the distribution from the trace files
-        distribution = FloatLogDistribution()
-        for idx in range(self.repeats):
-            sample_filename = samples_filename_of(
-                self.code, self.noise, idx, self.unit_shots
-            )
-            trace_filename = os.path.join(
-                self.trace_dir, f"{slugify(str(decoder))}.{sample_filename}.bin"
-            )
-            distribution += FloatLogDistribution().load_trace(trace_filename)
+        result_filename = self.result_filename(decoder)
+        if os.path.exists(result_filename):
+            with open(result_filename, "r") as f:
+                distribution = FloatLogDistribution.from_line(f)
+        else:
+            distribution = FloatLogDistribution()
+            for idx in tqdm(
+                range(self.repeats),
+                desc=f"loading {decoder} time distribution from file",
+            ):
+                sample_filename = samples_filename_of(
+                    self.code, self.noise, idx, self.unit_shots
+                )
+                trace_filename = os.path.join(
+                    self.trace_dir, f"{slugify(str(decoder))}.{sample_filename}.bin"
+                )
+                distribution += FloatLogDistribution().load_trace(trace_filename)
+            with open(result_filename, "w") as f:
+                f.write(distribution.to_line())
         x_vec, y_vec = distribution.flatten()
         ax.plot(x_vec, y_vec, ".-")
         ax.set_xlabel("decoding time ($s$)")
@@ -250,3 +261,6 @@ class TraceTimeDistributionPlotter:
         ax.set_ylabel("sample count")
         ax.set_yscale("log")
         ax.title.set_text(f"{decoder}: L={distribution.average():.2e}(s)")
+
+    def result_filename(self, decoder: str) -> str:
+        return f"{self.basename}.{slugify(str(decoder))}.logdist"
