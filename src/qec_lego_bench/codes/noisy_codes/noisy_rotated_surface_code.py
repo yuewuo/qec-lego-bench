@@ -13,6 +13,10 @@ class NoisyRotatedSurfaceCode(Code):
     # if not specified, rounds = distance
     rounds: Optional[int] = None
     basis: str = "X"
+    after_clifford_depolarization_ratio: float = 1.0
+    before_round_data_depolarization_ratio: float = 1.0
+    before_measure_flip_probability_ratio: float = 1.0
+    after_reset_flip_probability_ratio: float = 1.0
 
     def __post_init__(self):
         assert self.p >= 0
@@ -24,10 +28,14 @@ class NoisyRotatedSurfaceCode(Code):
             code_task,
             rounds=rounds,
             distance=self.d,
-            after_clifford_depolarization=self.p,
-            before_round_data_depolarization=self.p,
-            before_measure_flip_probability=self.p,
-            after_reset_flip_probability=self.p,
+            after_clifford_depolarization=self.p
+            * self.after_clifford_depolarization_ratio,
+            before_round_data_depolarization=self.p
+            * self.before_round_data_depolarization_ratio,
+            before_measure_flip_probability=self.p
+            * self.before_measure_flip_probability_ratio,
+            after_reset_flip_probability=self.p
+            * self.after_reset_flip_probability_ratio,
         )
 
     @property
